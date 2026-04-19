@@ -166,7 +166,7 @@ svg text{font-family:var(--fb)}
 <script>
 (function(){
   try{
-    var k='scribflow_v1';
+    var k='scribflow_app_v1';
     var s=localStorage.getItem(k);
     var theme=(s?JSON.parse(s).theme:'dark')||'dark';
     document.documentElement.className=theme;
@@ -180,7 +180,6 @@ svg text{font-family:var(--fb)}
 </script>
 </head>
 <body class="dark">
-<div style="position:fixed;top:0;left:50%;transform:translateX(-50%);background:#CC2020;color:#fff;font-size:10px;font-weight:700;padding:2px 14px;border-radius:0 0 8px 8px;letter-spacing:1px;z-index:9999;opacity:0.9">✨ VERSION DÉMO</div>
 <div id="toast" style="display:none"></div>
 
 <!-- Lock screen -->
@@ -441,7 +440,7 @@ function saveCustomCats(){
   localStorage.setItem('scribflow_cats',JSON.stringify(CATS));
 }
 loadCustomCats();
-const SK="scribflow_v1";
+const SK="scribflow_app_v1";
 let S,sci=0;
 let acTimeout=null; // debounce for Claude API
 
@@ -1268,7 +1267,21 @@ function removeGoal(id){
 }
 function getGoalsHTML(){
   const modeGoals=S.goals.filter(g=>g.mode===S.mode);
-  if(modeGoals.length===0) return '';
+  if(modeGoals.length===0){
+    return `<div class="card fi fd2">
+      <div class="section-toggle" onclick="toggleSection('goals')">
+        <span class="ctitle" style="margin:0">🎯 Objectifs d'épargne (0)</span>
+        <span class="chevron ${sectionStates['goals']?'':'open'}" data-chev="goals">▼</span>
+      </div>
+      <div class="section-body ${sectionStates['goals']?'collapsed':''}" data-section="goals" style="max-height:2000px">
+        <div style="padding:20px 0;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">🎯</div>
+          <div style="font-size:13px;color:var(--t2);margin-bottom:14px">Aucun objectif d'épargne pour le moment</div>
+          <button class="btn bg" onclick="om('m-goal')" style="font-size:12px;padding:8px 16px">+ Créer mon premier objectif</button>
+        </div>
+      </div>
+    </div>`;
+  }
   return `<div class="card fi fd2">
     <div class="section-toggle" onclick="toggleSection('goals')">
       <span class="ctitle" style="margin:0">🎯 Objectifs d'épargne (${modeGoals.length})</span>
@@ -1299,125 +1312,6 @@ function getGoalsHTML(){
     }).join('')}
     </div>
   </div>`;
-}
-
-// ─── DEMO DATA (injected once) ───
-if(!S._demo){
-  S._demo=true;
-  const y=new Date().getFullYear(), m=new Date().getMonth();
-  const mp=(i)=>`${y}-${String(m+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`;
-  const lm=(i)=>{const mm=m===0?11:m-1;const yy=m===0?y-1:y;return `${yy}-${String(mm+1).padStart(2,'0')}-${String(i).padStart(2,'0')}`};
-
-  // ── Revenus ponctuels ──
-  S.inc=[
-    {id:gid(),l:"Prime trimestrielle",a:450,d:mp(5),m:"perso"},
-    {id:gid(),l:"Vente Vinted",a:35,d:mp(3),m:"perso"},
-    {id:gid(),l:"Remboursement mutuelle",a:62,d:mp(7),m:"perso"},
-    {id:gid(),l:"Mission audit SI - DataPulse",a:1800,d:mp(2),m:"pro"},
-    {id:gid(),l:"Consulting cybersécurité - Veolia",a:950,d:mp(6),m:"pro"},
-  ];
-
-  // ── Dépenses ponctuelles (perso) ──
-  S.tx=[
-    {id:gid(),l:"Carrefour",a:92.40,ci:1,d:mp(2),m:"perso"},
-    {id:gid(),l:"Carrefour",a:67.80,ci:1,d:mp(8),m:"perso"},
-    {id:gid(),l:"Boulangerie Chez Paul",a:12.50,ci:1,d:mp(3),m:"perso"},
-    {id:gid(),l:"Restaurant Le Marin",a:45,ci:1,d:mp(5),m:"perso"},
-    {id:gid(),l:"Deliveroo",a:23.90,ci:1,d:mp(7),m:"perso"},
-    {id:gid(),l:"Total essence",a:68,ci:2,d:mp(1),m:"perso"},
-    {id:gid(),l:"Parking centre-ville",a:4.50,ci:2,d:mp(4),m:"perso"},
-    {id:gid(),l:"Contrôle technique",a:75,ci:2,d:mp(6),m:"perso"},
-    {id:gid(),l:"Pharmacie",a:18.70,ci:3,d:mp(3),m:"perso"},
-    {id:gid(),l:"Dentiste",a:45,ci:3,d:mp(7),m:"perso"},
-    {id:gid(),l:"Cinéma Madiana",a:22,ci:4,d:mp(2),m:"perso"},
-    {id:gid(),l:"Cadeau anniversaire",a:55,ci:7,d:mp(4),m:"perso"},
-    {id:gid(),l:"Coiffeur",a:25,ci:7,d:mp(6),m:"perso"},
-    // Dépenses mois précédent
-    {id:gid(),l:"Carrefour",a:105.30,ci:1,d:lm(5),m:"perso"},
-    {id:gid(),l:"Total essence",a:72,ci:2,d:lm(10),m:"perso"},
-    {id:gid(),l:"Restaurant",a:38,ci:1,d:lm(15),m:"perso"},
-    {id:gid(),l:"Pharmacie",a:22,ci:3,d:lm(8),m:"perso"},
-    // Dépenses pro
-    {id:gid(),l:"JetBrains IDE",a:24.90,ci:1,d:mp(1),m:"pro"},
-    {id:gid(),l:"Câble USB-C / Hub",a:34.90,ci:0,d:mp(3),m:"pro"},
-    {id:gid(),l:"Formation AWS Certified",a:199,ci:4,d:mp(5),m:"pro"},
-    {id:gid(),l:"Déplacement client Lyon",a:285,ci:2,d:mp(2),m:"pro"},
-    {id:gid(),l:"Nom de domaine thomas-riviere.dev",a:14.99,ci:1,d:mp(1),m:"pro"},
-  ];
-
-  // ── Récurrents ──
-  const renewDate=(daysFromNow)=>{const d=new Date();d.setDate(d.getDate()+daysFromNow);return d.toISOString().slice(0,10)};
-  S.rec=[
-    {id:gid(),l:"Salaire Nexium Solutions",a:3200,tp:"income",ci:0,start:"2024-01",end:null,cycle:0,renew:null,m:"perso"},
-    {id:gid(),l:"Loyer appartement",a:780,tp:"expense",ci:0,start:"2023-06",end:null,cycle:0,renew:null,m:"perso"},
-    {id:gid(),l:"Assurance auto",a:75,tp:"expense",ci:2,start:"2024-03",end:null,cycle:12,renew:renewDate(45),m:"perso"},
-    {id:gid(),l:"EDF",a:95,tp:"expense",ci:0,start:"2023-06",end:null,cycle:0,renew:null,m:"perso"},
-    {id:gid(),l:"Netflix",a:13.49,tp:"expense",ci:6,start:"2023-01",end:null,cycle:1,renew:renewDate(22),m:"perso"},
-    {id:gid(),l:"Spotify",a:10.99,tp:"expense",ci:6,start:"2023-03",end:null,cycle:1,renew:renewDate(15),m:"perso"},
-    {id:gid(),l:"Adobe Creative Cloud",a:59.99,tp:"expense",ci:6,start:"2025-04",end:null,cycle:12,renew:renewDate(5),m:"perso"},
-    {id:gid(),l:"Forfait Orange",a:24.99,tp:"expense",ci:6,start:"2022-09",end:null,cycle:0,renew:null,m:"perso"},
-    {id:gid(),l:"Salle Basic-Fit",a:29.99,tp:"expense",ci:4,start:"2025-05",end:null,cycle:12,renew:renewDate(25),m:"perso"},
-    {id:gid(),l:"GitHub Pro",a:4.00,tp:"expense",ci:1,start:"2025-01",end:null,cycle:1,renew:renewDate(3),m:"pro"},
-    {id:gid(),l:"AWS Lightsail",a:12.00,tp:"expense",ci:1,start:"2024-06",end:null,cycle:1,renew:renewDate(60),m:"pro"},
-    {id:gid(),l:"Assurance RC Pro",a:35,tp:"expense",ci:6,start:"2025-01",end:null,cycle:12,renew:renewDate(90),m:"pro"},
-  ];
-
-  // ── Échéanciers ──
-  S.inst=[
-    {id:gid(),l:"Dell XPS 15 pro",total:2499,n:12,monthly:208.25,tp:"expense",ci:0,start:`${y}-01`,m:"pro"},
-    {id:gid(),l:"MacBook Pro M4",total:2799,n:12,monthly:233.25,tp:"expense",ci:0,start:`${y}-01`,m:"perso"},
-    {id:gid(),l:"Canapé Maisons du Monde",total:1400,n:4,monthly:350,tp:"expense",ci:0,start:`${y}-02`,m:"perso"},
-  ];
-
-  // ── Budgets ──
-  const bk=`${y}-${m}-perso`;
-  const bkPro=`${y}-${m}-pro`;
-  const bkPrev=`${y}-${m===0?11:m-1}-perso`;
-  S.bgt={[bk]:2500,[bkPro]:800,[bkPrev]:2500};
-
-  // ── Objectifs d'épargne ──
-  S.goals=[
-    {id:gid(),name:"Voyage Japon",target:3500,saved:1200,mode:"perso"},
-    {id:gid(),name:"Fonds urgence",target:5000,saved:3200,mode:"perso"},
-    {id:gid(),name:"Certif. AWS Solutions Architect",target:1500,saved:600,mode:"pro"},
-  ];
-
-  // ── Habitudes perso ──
-  S.hab=[
-    {id:"hab_sport",n:"Sport / Exercice",c:"#06D6A0",m:"perso"},
-    {id:"hab_lecture",n:"Lecture 30 min",c:"#E8A87C",m:"perso"},
-    {id:"hab_meditation",n:"Méditation",c:"#C9B1FF",m:"perso"},
-    {id:"hab_eau",n:"2L d'eau",c:"#85CDCA",m:"perso"},
-    {id:"hab_retouche",n:"Veille tech 30 min",c:"#FFD166",m:"pro"},
-    {id:"hab_compta",n:"Compta 15 min",c:"#118AB2",m:"pro"},
-  ];
-
-  // ── Habit log : remplir les jours passés du mois en cours ──
-  const today=new Date().getDate();
-  const habits_perso=["hab_sport","hab_lecture","hab_meditation","hab_eau"];
-  const habits_pro=["hab_retouche","hab_compta"];
-  // Patterns réalistes (pas tous les jours pour chaque habitude)
-  const patterns={
-    hab_sport:   [1,1,0,1,1,0,0,1,1,0,1,1,0,0,1,1,0,1,1,0,0,1,1,0,1,1,0,0,1,1],
-    hab_lecture:  [1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,0],
-    hab_meditation:[0,1,1,0,1,1,0,1,1,1,0,1,0,1,1,1,0,1,1,0,1,1,1,0,1,1,0,1,1,1],
-    hab_eau:     [1,1,1,1,1,0,1,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1,0,1,1,1,1,1],
-    hab_retouche:[1,0,1,1,0,0,1,1,0,1,0,0,1,1,0,1,1,0,0,1,0,1,1,0,1,0,0,1,1,0],
-    hab_compta:  [1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1,1,1,1,0,0,1,1],
-  };
-  for(const [hid,pat] of Object.entries(patterns)){
-    for(let d=1;d<=Math.min(today,pat.length);d++){
-      if(pat[d-1]) S.hl[`${y}-${m}-${d}-${hid}`]=true;
-    }
-    // Aussi remplir le mois précédent
-    const pm2=m===0?11:m-1;const py=m===0?y-1:y;
-    const dpm=dim(py,pm2);
-    for(let d=1;d<=dpm;d++){
-      if(pat[(d-1)%pat.length] && Math.random()>0.15) S.hl[`${py}-${pm2}-${d}-${hid}`]=true;
-    }
-  }
-
-  sv();
 }
 
 // ─── Modals ───
@@ -2494,7 +2388,22 @@ function RB(cats){
       </div>
       </div>
     </div>
-  ` : '';
+  ` : `
+    <div class="card fi fd3">
+      <div class="section-toggle" onclick="toggleSection('subs')">
+        <span class="ctitle" style="margin:0">📱 Mes abonnements (0)</span>
+        <span class="chevron ${sectionStates['subs']?'':'open'}" data-chev="subs">▼</span>
+      </div>
+      <div class="section-body ${sectionStates['subs']?'collapsed':''}" data-section="subs" style="max-height:3000px">
+        <div style="padding:20px 0;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">📱</div>
+          <div style="font-size:13px;color:var(--t2);margin-bottom:6px">Aucun abonnement pour le moment</div>
+          <div style="font-size:11px;color:var(--t4);margin-bottom:14px">Ajoute un récurrent avec un cycle (mensuel, annuel...) pour le voir apparaître ici</div>
+          <button class="btn bv" onclick="om('m-rec')" style="font-size:12px;padding:8px 14px">+ Ajouter un abonnement</button>
+        </div>
+      </div>
+    </div>
+  `;
 
   const summaryLines=getSmartSummary();
 
@@ -2581,7 +2490,23 @@ function RB(cats){
         </div>`;
       }).join('')}
       </div>
-    </div>`:''}
+    </div>`:`
+    <div class="card fi fd3">
+      <div class="section-toggle" onclick="toggleSection('rec')">
+        <span class="ctitle" style="margin:0">🔄 Récurrents & Échéanciers actifs (0)</span>
+        <span class="chevron ${sectionStates['rec']?'':'open'}" data-chev="rec">▼</span>
+      </div>
+      <div class="section-body ${sectionStates['rec']?'collapsed':''}" data-section="rec" style="max-height:2000px">
+        <div style="padding:20px 0;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">🔄</div>
+          <div style="font-size:13px;color:var(--t2);margin-bottom:14px">Aucun récurrent ni échéancier pour le moment</div>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+            <button class="btn bv" onclick="om('m-rec')" style="font-size:12px;padding:8px 14px">+ Récurrent</button>
+            <button class="btn bbl" onclick="om('m-inst')" style="font-size:12px;padding:8px 14px">+ Échéancier</button>
+          </div>
+        </div>
+      </div>
+    </div>`}
 
     <div style="margin-top:8px" class="card fi fd3">
       <div class="section-toggle" onclick="toggleSection('tx')">
@@ -2596,7 +2521,14 @@ function RB(cats){
         const fExp2=(sq?allExp.filter(t=>t.l.toLowerCase().includes(sq)||CATS[S.mode][t.ci]?.n.toLowerCase().includes(sq)):allExp).map(t=>({...t,_type:'exp'}));
         const allTx2=[...fInc2,...fExp2].sort((a,b)=>a.d>b.d?-1:a.d<b.d?1:(b.ts||0)-(a.ts||0));
         const total=allTx2.length;
-        if(total===0) return sq?'<div class="empty">Aucune transaction trouvée pour "'+searchQuery+'"</div>':'<div class="empty">Aucune transaction ce mois</div>';
+        if(total===0) return sq?'<div class="empty">Aucune transaction trouvée pour "'+searchQuery+'"</div>':`<div style="padding:20px 0;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">💸</div>
+          <div style="font-size:13px;color:var(--t2);margin-bottom:14px">Aucune transaction ce mois</div>
+          <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+            <button class="btn bp" onclick="om('m-exp')" style="font-size:12px;padding:8px 14px">+ Dépense</button>
+            <button class="btn bg" onclick="om('m-inc')" style="font-size:12px;padding:8px 14px">+ Revenu</button>
+          </div>
+        </div>`;
         let html='';
         if(sq) html+=`<div style="font-size:11px;color:var(--t4);margin-bottom:8px">${total} résultat${total>1?'s':''} pour "${searchQuery}"${sq?` — <span style="color:var(--blue);cursor:pointer" onclick="updateSearch(\\'\\')">Effacer</span>`:''}</div>`;
         html+=allTx2.map(t=>{
