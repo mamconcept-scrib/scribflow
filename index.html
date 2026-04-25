@@ -260,11 +260,13 @@ svg text{font-family:var(--fb)}
 <div class="mo" id="m-exp"><div class="md"><div class="mh"><span class="mt">Nouvelle dépense</span><button class="mc" onclick="cm('m-exp')">✕</button></div><div class="mf">
   <div id="mb-exp" class="mode-banner"></div>
   <div style="display:flex;gap:8px;align-items:center">
-    <input id="el" placeholder="Libellé (ex: Carrefour, Uber, Pharmacie...)" oninput="autoCat(this.value)" style="flex:1">
+    <input id="el" placeholder="Libellé (ex: Courses, Essence, Restaurant...)" oninput="onExpLabelInput(this.value)" style="flex:1">
     <button id="mic-btn" onclick="startVoice()" style="width:44px;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0" title="Dicter la dépense">🎤</button>
   </div>
   <div id="voice-status" style="display:none;font-size:13px;padding:12px 16px;border-radius:10px;background:rgba(239,71,111,0.15);border:1px solid rgba(239,71,111,0.3);color:var(--red);font-weight:600;text-align:center"></div>
+  <div id="vendor-suggest" style="display:none;font-size:12px;padding:8px 12px;border-radius:8px;background:rgba(17,138,178,0.12);border:1px solid rgba(17,138,178,0.3);color:var(--blue)"></div>
   <div id="ai-badge" style="display:none;font-size:11px;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--t3);align-items:center;gap:6px"></div>
+  <input id="ev" placeholder="🏪 Magasin/Vendeur (optionnel — ex: Carrefour Dillon)">
   <input id="ea" placeholder="Montant (€)" type="number" step="0.01">
   <select id="ec"></select><input id="ed" type="date">
   <!-- Section pliable : Joindre une facture -->
@@ -727,6 +729,53 @@ function autoCat(val) {
       badge.innerHTML = '<span style="color:var(--t4)">Catégorie non détectée — sélection manuelle</span>';
     }
   }, 600);
+}
+
+// ─── Détection magasin/vendeur depuis le libellé ───
+// Si l'utilisateur tape un nom de magasin connu dans Libellé,
+// on lui suggère de le déplacer vers le champ Vendeur (qui est plus approprié).
+
+function isKnownVendor(text) {
+  // Cherche si le texte saisi correspond à un magasin connu (clé de DICT_PERSO ou DICT_PRO)
+  const t = text.trim().toLowerCase();
+  if (t.length < 3) return false;
+  const allKeys = [...new Set([...Object.keys(DICT_PERSO), ...Object.keys(DICT_PRO)])];
+  // Match exact ou si le texte est une clé multi-mots du dico
+  return allKeys.some(k => k.toLowerCase() === t);
+}
+
+function onExpLabelInput(val) {
+  // 1. Auto-catégorisation comme avant
+  autoCat(val);
+  
+  // 2. Suggestion de vendeur SI le libellé saisi est un magasin connu ET le champ Vendeur est vide
+  const trimmed = val.trim();
+  const vendorField = $('ev');
+  const suggestEl = $('vendor-suggest');
+  if (!suggestEl) return;
+  
+  if (vendorField && vendorField.value.trim() === '' && isKnownVendor(trimmed)) {
+    // Capitalize properly
+    const capitalized = trimmed.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    suggestEl.innerHTML = `💡 <strong>${capitalized}</strong> est un magasin. <button onclick="acceptVendorSuggestion('${capitalized.replace(/'/g, "\\'")}')" style="margin-left:6px;background:var(--blue);color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">Déplacer vers Vendeur</button>`;
+    suggestEl.style.display = 'block';
+  } else {
+    suggestEl.style.display = 'none';
+  }
+}
+
+function acceptVendorSuggestion(vendor) {
+  const labelField = $('el');
+  const vendorField = $('ev');
+  const suggestEl = $('vendor-suggest');
+  if (vendorField) vendorField.value = vendor;
+  if (labelField) labelField.value = '';
+  if (suggestEl) suggestEl.style.display = 'none';
+  // Refocus sur le libellé pour saisir le vrai produit/raison
+  if (labelField) {
+    labelField.placeholder = 'Libellé (ex: Courses, Essence, Restaurant...)';
+    labelField.focus();
+  }
 }
 
 // ─── BONS D'ACHAT & FACTURES — Helpers ───
@@ -1253,7 +1302,7 @@ function startVoice() {
     micBtn.style.background = 'rgba(239,71,111,0.3)';
     micBtn.style.borderColor = 'var(--red)';
     micBtn.style.animation = 'pulse 1s infinite';
-    showVoiceStatus("🎙️ Parlez maintenant... (ex: «Carrefour quatre-vingt-sept euros»)", true);
+    showVoiceStatus("🎙️ Parlez maintenant... (ex: «Carrefour Dillon courses 87 euros»)", true);
   };
   
   recognition.onresult = (event) => {
@@ -1418,6 +1467,36 @@ function parseVoiceInput(text) {
   }
   
   // ─── Apply results ───
+  // Si parseInvoiceVoice est disponible (séparation vendeur/label intelligente), on l'utilise
+  // pour remplir aussi le champ Vendeur (option D — fusion dépense + facture)
+  if (typeof parseInvoiceVoice === 'function') {
+    const smart = parseInvoiceVoice(text);
+    if (smart.vendor && $('ev')) {
+      $('ev').value = smart.vendor;
+      // Le label devient le "vrai" produit/raison (différent du vendeur)
+      if (smart.label && smart.label.toLowerCase() !== smart.vendor.toLowerCase()) {
+        $('el').value = smart.label;
+        autoCat(smart.label);
+      } else {
+        // Si label = vendeur (ex: "Carrefour 50€"), on laisse le libellé vide
+        $('el').value = '';
+      }
+      if (smart.amount && !isNaN(smart.amount) && smart.amount > 0) {
+        $('ea').value = Math.round(smart.amount * 100) / 100;
+      }
+      const parts = [];
+      if (smart.vendor) parts.push(`📍 ${smart.vendor}`);
+      if (smart.label && smart.label.toLowerCase() !== smart.vendor.toLowerCase()) parts.push(`"${smart.label}"`);
+      if (smart.amount) parts.push(fmt(smart.amount));
+      showVoiceStatus(`✅ Compris : ${parts.join(' — ') || original}`, false);
+      if (recognition) { try { recognition.stop(); } catch(e) {} }
+      isListening = false;
+      resetMicBtn();
+      return;
+    }
+  }
+  
+  // Fallback : ancien comportement (label + montant uniquement)
   if (label) {
     $('el').value = label;
     autoCat(label);
@@ -2246,6 +2325,8 @@ function om(id){
   // Reset fields when opening financial modals (not when editing)
   if(id==='m-exp' && !editingExpId){
     $('el').value='';$('ea').value='';$('ed').value='';
+    if($('ev')) $('ev').value='';
+    if($('vendor-suggest')) $('vendor-suggest').style.display='none';
     const vs=$('voice-status');if(vs)vs.style.display='none';
     const ab=$('ai-badge');if(ab)ab.style.display='none';
     hideBadge();
@@ -2600,7 +2681,7 @@ function updateSearch(val){
         if(t._type==='inc'){
           return `<div class="txrow txi"><span style="font-size:16px">💵</span><span class="txl">${t.l} ${badge}</span><span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--green)">${S._priv?'+'+fmt(t.a):'••••••'}</span>${t.id&&S._priv?`<button class="bgh" onclick="editInc('${t.id}')">✏️</button><button class="bgh" onclick="rinc('${t.id}')">✕</button>`:''}</div>`;
         } else {
-          return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.l} ${badge}${t.invoiceId?'<span onclick="viewInvoice(\''+t.invoiceId+'\');event.stopPropagation()" style="cursor:pointer;margin-left:6px;font-size:13px" title="Voir la facture">📎</span>':''}</span><span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--red)">-${fmt(t.a)}</span>${t.id?`<button class="bgh" onclick="editExp('${t.id}')">✏️</button><button class="bgh" onclick="rtx('${t.id}')">✕</button>`:''}</div>`;
+          return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.v?t.v+' — '+t.l:t.l} ${badge}${t.invoiceId?'<span onclick="viewInvoice(\''+t.invoiceId+'\');event.stopPropagation()" style="cursor:pointer;margin-left:6px;font-size:13px" title="Voir la facture">📎</span>':''}</span><span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--red)">-${fmt(t.a)}</span>${t.id?`<button class="bgh" onclick="editExp('${t.id}')">✏️</button><button class="bgh" onclick="rtx('${t.id}')">✕</button>`:''}</div>`;
         }
       }).join('');
       if(sq && fExp.length>0){
@@ -2911,17 +2992,19 @@ function getSmartSummary(){
 }
 
 function addExp(){
-  const l=$('el').value.trim(),a=parseFloat($('ea').value),c=parseInt($('ec').value),d=$('ed').value||new Date().toISOString().slice(0,10);
+  const l=$('el').value.trim(),v=$('ev')?$('ev').value.trim():'',a=parseFloat($('ea').value),c=parseInt($('ec').value),d=$('ed').value||new Date().toISOString().slice(0,10);
   if(!l||!a)return;
   const isEdit = !!editingExpId;
   let txId;
   if (editingExpId) {
     const tx = S.tx.find(t=>t.id===editingExpId);
-    if(tx){ tx.l=l; tx.a=a; tx.ci=c; tx.d=d; txId = tx.id; }
+    if(tx){ tx.l=l; tx.a=a; tx.ci=c; tx.d=d; if(v) tx.v=v; else delete tx.v; txId = tx.id; }
     editingExpId = null;
   } else {
-    txId = gid();
-    S.tx.push({id:txId,l,a,ci:c,d,m:S.mode,ts:Date.now()});
+    const newTx = {id:gid(),l,a,ci:c,d,m:S.mode,ts:Date.now()};
+    if(v) newTx.v = v;
+    txId = newTx.id;
+    S.tx.push(newTx);
   }
   
   // Si une facture est jointe, la créer et la lier à la transaction
@@ -2931,7 +3014,7 @@ function addExp(){
     S.invoices.push({
       id: invoiceId,
       label: l,
-      vendor: l,
+      vendor: v || l,    // utilise le vendeur si renseigné, sinon le libellé
       amount: a,
       date: d,
       cat: c,
@@ -2946,11 +3029,15 @@ function addExp(){
   }
   
   const cat=CATS[S.mode][c];
-  sv();cm('m-exp');hideBadge();R();$('el').value='';$('ea').value='';$('ed').value='';$('ec').value='0';
+  sv();cm('m-exp');hideBadge();R();
+  $('el').value='';$('ea').value='';$('ed').value='';$('ec').value='0';
+  if($('ev')) $('ev').value='';
+  if($('vendor-suggest')) $('vendor-suggest').style.display='none';
   resetExpInvoice();
   const vs=$('voice-status');if(vs)vs.style.display='none';
   $('m-exp').querySelector('.mt').textContent='Nouvelle dépense';
-  const toastMsg = isEdit ? `✏️ Dépense modifiée : ${l} — ${fmt(a)}` : `✅ Dépense ajoutée : ${l} — ${fmt(a)} (${cat?.i} ${cat?.n})${invoiceCreated ? ' 📎' : ''}`;
+  const displayName = v ? `${v} — ${l}` : l;
+  const toastMsg = isEdit ? `✏️ Dépense modifiée : ${displayName} — ${fmt(a)}` : `✅ Dépense ajoutée : ${displayName} — ${fmt(a)} (${cat?.i} ${cat?.n})${invoiceCreated ? ' 📎' : ''}`;
   showToast(toastMsg);
 }
 function addInc(){
@@ -2976,6 +3063,8 @@ function editExp(id){
   $('el').value = tx.l;
   $('ea').value = tx.a;
   $('ed').value = tx.d;
+  if($('ev')) $('ev').value = tx.v || '';
+  if($('vendor-suggest')) $('vendor-suggest').style.display='none';
   om('m-exp');
   // Wait for modal to open then set category
   setTimeout(()=>{ $('ec').value = tx.ci; autoCat(tx.l); }, 50);
@@ -3482,7 +3571,7 @@ function RB(cats){
             <span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--green)">${S._priv?'+'+fmt(t.a):'••••••'}</span>
             ${t.id&&S._priv?`<button class="bgh" onclick="editInc('${t.id}')" title="Modifier">✏️</button><button class="bgh" onclick="rinc('${t.id}')">✕</button>`:''}</div>`;
           } else {
-            return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.l} ${badge}${t.invoiceId?'<span onclick="viewInvoice(\''+t.invoiceId+'\');event.stopPropagation()" style="cursor:pointer;margin-left:6px;font-size:13px" title="Voir la facture">📎</span>':''}</span>
+            return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.v?t.v+' — '+t.l:t.l} ${badge}${t.invoiceId?'<span onclick="viewInvoice(\''+t.invoiceId+'\');event.stopPropagation()" style="cursor:pointer;margin-left:6px;font-size:13px" title="Voir la facture">📎</span>':''}</span>
             <span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--red)">-${fmt(t.a)}</span>
             ${t.id?`<button class="bgh" onclick="editExp('${t.id}')" title="Modifier">✏️</button><button class="bgh" onclick="rtx('${t.id}')">✕</button>`:''}</div>`;
           }
