@@ -103,7 +103,9 @@ body{background:#000000;background:var(--body-bg);color:var(--t1);font-family:va
 .mt{font-size:18px;font-weight:700}.mc{background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer}
 .mf{display:flex;flex-direction:column;gap:12px}
 .mflbl{font-size:12px;color:var(--t3);margin-bottom:-6px}
-input,select{width:100%;padding:10px 14px;border-radius:var(--rs);border:1px solid var(--input-brd);background:var(--input-bg);color:var(--t1);font-size:14px;font-family:var(--fb);outline:none}
+input,select{width:100%;padding:10px 14px;border-radius:var(--rs);border:1px solid var(--input-brd);background:var(--input-bg);color:var(--t1);font-size:14px;font-family:var(--fb);outline:none;box-sizing:border-box;-webkit-appearance:none;appearance:none}
+input[type="date"]{padding-right:8px;min-height:40px}
+select{padding-right:30px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23999' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:10px;min-height:40px}
 input:focus,select:focus{border-color:var(--t3)}
 select option{background:var(--modal-bg);color:var(--t1)}
 
@@ -264,7 +266,20 @@ svg text{font-family:var(--fb)}
   <div id="voice-status" style="display:none;font-size:13px;padding:12px 16px;border-radius:10px;background:rgba(239,71,111,0.15);border:1px solid rgba(239,71,111,0.3);color:var(--red);font-weight:600;text-align:center"></div>
   <div id="ai-badge" style="display:none;font-size:11px;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--t3);align-items:center;gap:6px"></div>
   <input id="ea" placeholder="Montant (€)" type="number" step="0.01">
-  <select id="ec"></select><input id="ed" type="date"><button class="btn bp" onclick="addExp()">Ajouter</button>
+  <select id="ec"></select><input id="ed" type="date">
+  <!-- Section pliable : Joindre une facture -->
+  <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;margin-top:4px">
+    <div style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none" onclick="toggleExpInvoice()">
+      <span id="exp-inv-chev" style="font-size:11px;color:var(--t3);transition:transform .2s">▶</span>
+      <span style="font-size:13px;color:var(--t2);font-weight:500">📷 Joindre une facture (optionnel)</span>
+    </div>
+    <div id="exp-inv-body" style="display:none;margin-top:10px">
+      <input id="exp-inv-input" type="file" accept="image/*" style="font-size:12px;padding:6px;width:100%" onchange="handleExpInvoicePhoto(this)">
+      <div style="font-size:10px;color:var(--t4);margin-top:4px">💡 Tu peux ajouter plusieurs pages</div>
+      <div id="exp-inv-preview" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+  </div>
+  <button class="btn bp" onclick="addExp()">Ajouter</button>
 </div></div></div>
 
 <!-- Revenu ponctuel -->
@@ -944,6 +959,61 @@ function removeInvoicePage(idx) {
   renderInvoicePhotoPreviews();
 }
 
+// ─── Joindre une facture depuis le modal Dépense (option D) ───
+let currentExpInvoicePages = []; // pages de la facture jointe à la dépense en cours
+
+function toggleExpInvoice() {
+  const body = $('exp-inv-body');
+  const chev = $('exp-inv-chev');
+  if (!body || !chev) return;
+  const isOpen = body.style.display === 'block';
+  body.style.display = isOpen ? 'none' : 'block';
+  chev.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
+}
+
+async function handleExpInvoicePhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  try {
+    showToast('Compression photo en cours...');
+    const compressed = await compressImage(input.files[0]);
+    currentExpInvoicePages.push(compressed);
+    renderExpInvoicePreviews();
+    input.value = '';
+  } catch (e) {
+    showToast('❌ Erreur de chargement');
+    console.error(e);
+  }
+}
+
+function renderExpInvoicePreviews() {
+  const preview = $('exp-inv-preview');
+  if (!preview) return;
+  preview.innerHTML = currentExpInvoicePages.map((p, idx) => `
+    <div style="position:relative;display:inline-block">
+      <img src="${p}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,0.12)">
+      <div style="position:absolute;top:2px;left:2px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;padding:1px 4px;border-radius:3px">P${idx+1}</div>
+      <button onclick="removeExpInvoicePage(${idx})" style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:9px">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeExpInvoicePage(idx) {
+  currentExpInvoicePages.splice(idx, 1);
+  renderExpInvoicePreviews();
+}
+
+// Reset de l'état facture-jointe (appelé depuis om('m-exp'))
+function resetExpInvoice() {
+  currentExpInvoicePages = [];
+  renderExpInvoicePreviews();
+  const body = $('exp-inv-body');
+  const chev = $('exp-inv-chev');
+  if (body) body.style.display = 'none';
+  if (chev) chev.style.transform = 'rotate(0deg)';
+  const input = $('exp-inv-input');
+  if (input) input.value = '';
+}
+
 function addInvoice() {
   const label = $('i-label').value.trim();
   const vendor = $('i-vendor').value.trim();
@@ -977,7 +1047,17 @@ function addInvoice() {
 }
 
 function deleteInvoice(id) {
-  showConfirm('Supprimer cette facture et toutes ses photos ?', () => {
+  const inv = S.invoices.find(i => i.id === id);
+  const isLinked = inv && inv.linkedTxId;
+  const msg = isLinked 
+    ? 'Supprimer cette facture ? La dépense liée sera conservée mais ne sera plus liée.' 
+    : 'Supprimer cette facture et toutes ses photos ?';
+  showConfirm(msg, () => {
+    // Délier la transaction si elle existe
+    if (isLinked) {
+      const tx = S.tx.find(t => t.id === inv.linkedTxId);
+      if (tx) delete tx.invoiceId;
+    }
     S.invoices = S.invoices.filter(i => i.id !== id);
     sv(); R();
     showToast('🗑️ Facture supprimée');
@@ -994,6 +1074,7 @@ function viewInvoice(id) {
   body.innerHTML = `
     <div style="padding:14px">
       <div style="background:rgba(255,255,255,0.04);padding:12px;border-radius:8px;margin-bottom:12px">
+        ${inv.linkedTxId ? `<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--blue);margin-bottom:8px;padding:6px 10px;background:rgba(17,138,178,0.12);border-radius:6px"><span>🔗</span><span>Liée à une dépense</span></div>` : ''}
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <span style="color:var(--t4);font-size:12px">Vendeur</span>
           <span style="font-weight:600">${inv.vendor || '—'}</span>
@@ -2065,6 +2146,7 @@ function om(id){
     const vs=$('voice-status');if(vs)vs.style.display='none';
     const ab=$('ai-badge');if(ab)ab.style.display='none';
     hideBadge();
+    resetExpInvoice();
   }
   if(id==='m-inc' && !editingIncId){
     $('il').value='';$('ia').value='';$('id2').value='';
@@ -2415,7 +2497,7 @@ function updateSearch(val){
         if(t._type==='inc'){
           return `<div class="txrow txi"><span style="font-size:16px">💵</span><span class="txl">${t.l} ${badge}</span><span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--green)">${S._priv?'+'+fmt(t.a):'••••••'}</span>${t.id&&S._priv?`<button class="bgh" onclick="editInc('${t.id}')">✏️</button><button class="bgh" onclick="rinc('${t.id}')">✕</button>`:''}</div>`;
         } else {
-          return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.l} ${badge}</span><span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--red)">-${fmt(t.a)}</span>${t.id?`<button class="bgh" onclick="editExp('${t.id}')">✏️</button><button class="bgh" onclick="rtx('${t.id}')">✕</button>`:''}</div>`;
+          return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.l} ${badge}${t.invoiceId?'<span onclick="viewInvoice(\''+t.invoiceId+'\');event.stopPropagation()" style="cursor:pointer;margin-left:6px;font-size:13px" title="Voir la facture">📎</span>':''}</span><span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--red)">-${fmt(t.a)}</span>${t.id?`<button class="bgh" onclick="editExp('${t.id}')">✏️</button><button class="bgh" onclick="rtx('${t.id}')">✕</button>`:''}</div>`;
         }
       }).join('');
       if(sq && fExp.length>0){
@@ -2729,18 +2811,45 @@ function addExp(){
   const l=$('el').value.trim(),a=parseFloat($('ea').value),c=parseInt($('ec').value),d=$('ed').value||new Date().toISOString().slice(0,10);
   if(!l||!a)return;
   const isEdit = !!editingExpId;
+  let txId;
   if (editingExpId) {
     const tx = S.tx.find(t=>t.id===editingExpId);
-    if(tx){ tx.l=l; tx.a=a; tx.ci=c; tx.d=d; }
+    if(tx){ tx.l=l; tx.a=a; tx.ci=c; tx.d=d; txId = tx.id; }
     editingExpId = null;
   } else {
-    S.tx.push({id:gid(),l,a,ci:c,d,m:S.mode,ts:Date.now()});
+    txId = gid();
+    S.tx.push({id:txId,l,a,ci:c,d,m:S.mode,ts:Date.now()});
   }
+  
+  // Si une facture est jointe, la créer et la lier à la transaction
+  let invoiceCreated = false;
+  if (currentExpInvoicePages.length > 0) {
+    const invoiceId = gid();
+    S.invoices.push({
+      id: invoiceId,
+      label: l,
+      vendor: l,         // par défaut, vendeur = libellé
+      amount: a,
+      date: d,
+      cat: c,
+      notes: '',
+      pages: [...currentExpInvoicePages],
+      mode: S.mode,
+      linkedTxId: txId
+    });
+    // Lier la transaction à la facture
+    const tx = S.tx.find(t => t.id === txId);
+    if (tx) tx.invoiceId = invoiceId;
+    invoiceCreated = true;
+  }
+  
   const cat=CATS[S.mode][c];
   sv();cm('m-exp');hideBadge();R();$('el').value='';$('ea').value='';$('ed').value='';$('ec').value='0';
+  resetExpInvoice();
   const vs=$('voice-status');if(vs)vs.style.display='none';
   $('m-exp').querySelector('.mt').textContent='Nouvelle dépense';
-  showToast(isEdit?`✏️ Dépense modifiée : ${l} — ${fmt(a)}`:`✅ Dépense ajoutée : ${l} — ${fmt(a)} (${cat?.i} ${cat?.n})`);
+  const toastMsg = isEdit ? `✏️ Dépense modifiée : ${l} — ${fmt(a)}` : `✅ Dépense ajoutée : ${l} — ${fmt(a)} (${cat?.i} ${cat?.n})${invoiceCreated ? ' 📎' : ''}`;
+  showToast(toastMsg);
 }
 function addInc(){
   const l=$('il').value.trim(),a=parseFloat($('ia').value),d=$('id2').value||new Date().toISOString().slice(0,10);
@@ -2788,7 +2897,18 @@ function editInc(id){
 function rtx(id){
   const tx=S.tx.find(t=>t.id===id);
   if(!tx) return;
-  showConfirm(`Supprimer la dépense "${tx.l}" (${fmt(tx.a)}) ?`,()=>{S.tx=S.tx.filter(t=>t.id!==id);sv();R();showToast('🗑 Dépense supprimée','var(--red)');});
+  const hasInvoice = !!tx.invoiceId;
+  const msg = hasInvoice 
+    ? `Supprimer la dépense "${tx.l}" (${fmt(tx.a)}) et sa facture jointe ?`
+    : `Supprimer la dépense "${tx.l}" (${fmt(tx.a)}) ?`;
+  showConfirm(msg,()=>{
+    if (tx.invoiceId) {
+      S.invoices = S.invoices.filter(i => i.id !== tx.invoiceId);
+    }
+    S.tx=S.tx.filter(t=>t.id!==id);
+    sv();R();
+    showToast('🗑 Dépense supprimée','var(--red)');
+  });
 }
 function rinc(id){
   const inc=S.inc.find(t=>t.id===id);
@@ -3297,7 +3417,7 @@ function RB(cats){
             <span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--green)">${S._priv?'+'+fmt(t.a):'••••••'}</span>
             ${t.id&&S._priv?`<button class="bgh" onclick="editInc('${t.id}')" title="Modifier">✏️</button><button class="bgh" onclick="rinc('${t.id}')">✕</button>`:''}</div>`;
           } else {
-            return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.l} ${badge}</span>
+            return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.l} ${badge}${t.invoiceId?'<span onclick="viewInvoice(\''+t.invoiceId+'\');event.stopPropagation()" style="cursor:pointer;margin-left:6px;font-size:13px" title="Voir la facture">📎</span>':''}</span>
             <span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--red)">-${fmt(t.a)}</span>
             ${t.id?`<button class="bgh" onclick="editExp('${t.id}')" title="Modifier">✏️</button><button class="bgh" onclick="rtx('${t.id}')">✕</button>`:''}</div>`;
           }
