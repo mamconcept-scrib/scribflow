@@ -371,9 +371,9 @@ svg text{font-family:var(--fb)}
       <input id="v-pct" placeholder="Réduction (%)" type="number" step="1" min="0" max="100">
     </div>
     <input id="v-code" placeholder="Code / référence (optionnel)">
-    <div style="display:flex;gap:8px">
-      <div style="flex:1"><label style="font-size:11px;color:var(--t4)">Obtenu le</label><input id="v-obtained" type="date"></div>
-      <div style="flex:1"><label style="font-size:11px;color:var(--t4)">Expire le</label><input id="v-expires" type="date"></div>
+    <div style="display:flex;gap:8px;align-items:flex-end">
+      <div style="flex:1;min-width:0"><label style="font-size:11px;color:var(--t4);display:block;margin-bottom:4px">Obtenu le</label><input id="v-obtained" type="date" style="width:100%;box-sizing:border-box"></div>
+      <div style="flex:1;min-width:0"><label style="font-size:11px;color:var(--t4);display:block;margin-bottom:4px">Expire le</label><input id="v-expires" type="date" style="width:100%;box-sizing:border-box"></div>
     </div>
     <input id="v-notes" placeholder="Notes (optionnel)">
     <div>
@@ -396,9 +396,9 @@ svg text{font-family:var(--fb)}
     <div class="voice-status-generic" data-for="i-label" style="display:none"></div>
     <input id="i-vendor" placeholder="Vendeur / magasin (ex: But Lamentin)">
     <input id="i-amount" placeholder="Montant TTC (€)" type="number" step="0.01">
-    <div style="display:flex;gap:8px">
-      <div style="flex:1"><label style="font-size:11px;color:var(--t4)">Date</label><input id="i-date" type="date"></div>
-      <div style="flex:1"><label style="font-size:11px;color:var(--t4)">Catégorie</label><select id="i-cat"></select></div>
+    <div style="display:flex;gap:8px;align-items:flex-end">
+      <div style="flex:1;min-width:0"><label style="font-size:11px;color:var(--t4);display:block;margin-bottom:4px">Date</label><input id="i-date" type="date" style="width:100%;box-sizing:border-box"></div>
+      <div style="flex:1;min-width:0"><label style="font-size:11px;color:var(--t4);display:block;margin-bottom:4px">Catégorie</label><select id="i-cat" style="width:100%;box-sizing:border-box"></select></div>
     </div>
     <input id="i-notes" placeholder="Notes (optionnel)">
     <div>
