@@ -391,7 +391,7 @@ svg text{font-family:var(--fb)}
   <div class="mf">
     <div style="display:flex;gap:8px;align-items:center">
       <input id="i-label" placeholder="Libellé (ex: Achat micro-ondes)" style="flex:1">
-      <button class="mic-btn-ui" onclick="startVoiceFor('i-label','i-amount')" title="Dicter">🎤</button>
+      <button class="mic-btn-ui" onclick="startVoiceForInvoice()" title="Dicter (vendeur + libellé + montant)">🎤</button>
     </div>
     <div class="voice-status-generic" data-for="i-label" style="display:none"></div>
     <input id="i-vendor" placeholder="Vendeur / magasin (ex: But Lamentin)">
@@ -1518,6 +1518,182 @@ function parseVoiceGeneric(text) {
   if (label.length > 0) label = label.charAt(0).toUpperCase() + label.slice(1);
   
   return { label, amount };
+}
+
+// ─── Parse vocal spécifique aux factures (vendeur + label + montant) ───
+// Détecte le magasin/vendeur en cherchant dans le dictionnaire DICT_PERSO
+// "But Lamentin micro-ondes 189 euros" → vendor="But Lamentin", label="Micro-ondes", amount=189
+// "Carrefour Dillon courses 87 euros 50" → vendor="Carrefour Dillon", label="Courses", amount=87.50
+function parseInvoiceVoice(text) {
+  const original = fixVoiceText(text.trim());
+  let processed = original.toLowerCase();
+  let amount = null;
+  let vendor = '';
+  
+  // 1. Extraction du montant (même logique que parseVoiceGeneric)
+  const euroCentMatch = processed.match(/(\d+[\s,.]?\d*)\s*euros?\s+(\d{1,2})\s*(centimes?|cents?)?/i);
+  if (euroCentMatch) {
+    amount = parseFloat(euroCentMatch[1].replace(/[\s,]/g, '.')) + parseFloat(euroCentMatch[2]) / 100;
+    processed = processed.replace(euroCentMatch[0], '');
+  }
+  if (!amount) {
+    const euroMatch = processed.match(/(\d+[\s,.]?\d*)\s*€|(\d+[\s,.]?\d*)\s*euros?/i);
+    if (euroMatch) {
+      const numStr = (euroMatch[1] || euroMatch[2]).replace(/[\s]/g, '').replace(',', '.');
+      amount = parseFloat(numStr);
+      processed = processed.replace(euroMatch[0], '');
+    }
+  }
+  
+  // 2. Détection du magasin/vendeur via le dictionnaire
+  // On combine DICT_PERSO + DICT_PRO et on trie par longueur décroissante
+  // pour matcher "Carrefour Dillon" avant "Carrefour"
+  const allKeys = [...new Set([...Object.keys(DICT_PERSO), ...Object.keys(DICT_PRO)])];
+  const sortedKeys = allKeys.sort((a, b) => b.length - a.length);
+  
+  // Suffixes de localisation Martinique (à inclure dans le vendeur si présents juste après)
+  const locations = [
+    'dillon', 'galleria', 'la galleria', 'terca', 'génipa', 'genipa', 'robert', 'le robert',
+    'lamentin', 'le lamentin', 'ducos', 'schoelcher', 'fort-de-france', 'fort de france',
+    'trinité', 'le marin', 'marin', 'capesterre', 'montjoly', 'cluny', 'place d\'armes',
+    'bô kanal', 'bo kanal', 'contact', 'market', 'express'
+  ];
+  
+  for (const key of sortedKeys) {
+    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp('\\b' + escapedKey + '\\b', 'i');
+    const m = processed.match(re);
+    if (m) {
+      vendor = m[0];
+      // Position dans le texte pour vérifier s'il y a une localisation après
+      const afterIdx = m.index + m[0].length;
+      const after = processed.substring(afterIdx).trim();
+      // Vérifier si le mot juste après est une localisation
+      for (const loc of locations) {
+        const escapedLoc = loc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const locRe = new RegExp('^\\s*' + escapedLoc + '\\b', 'i');
+        const locM = after.match(locRe);
+        if (locM) {
+          vendor += ' ' + locM[0].trim();
+          // Retirer la localisation du processed pour qu'elle ne soit pas dans le label
+          processed = processed.substring(0, m.index) + ' ' + after.substring(locM[0].length);
+          break;
+        }
+      }
+      // Retirer le vendeur du label
+      processed = processed.replace(re, ' ');
+      break;
+    }
+  }
+  
+  // 3. Le reste = label
+  let label = processed.replace(/\s+/g, ' ').replace(/^\s*(pour|chez|à|au|aux|en|de|du|des|le|la|les|un|une|euros?)\s+/i, '').trim();
+  // Nettoyer les mots de transition restants
+  label = label.replace(/\b(pour|chez|à|au|aux|en|de|du|des)\b/gi, ' ').replace(/\s+/g, ' ').trim();
+  
+  // Capitaliser proprement
+  if (vendor.length > 0) {
+    vendor = vendor.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+  }
+  if (label.length > 0) {
+    label = label.charAt(0).toUpperCase() + label.slice(1);
+  }
+  
+  // Si pas de vendeur trouvé mais label rempli, on laisse le vendeur vide (l'utilisateur peut ajuster)
+  // Si pas de label mais vendeur trouvé, recopier le vendeur dans le label
+  if (!label && vendor) {
+    label = vendor;
+  }
+  
+  return { vendor, label, amount };
+}
+
+// Démarre la dictée vocale spécifique au modal Facture (3 champs)
+function startVoiceForInvoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    showToast('❌ Dictée vocale non supportée','var(--red)');
+    return;
+  }
+  const labelField = $('i-label');
+  const micBtn = labelField.parentElement.querySelector('.mic-btn-ui');
+  const statusEl = document.querySelector('.voice-status-generic[data-for="i-label"]');
+  
+  if (isListening && recognition) {
+    recognition.stop();
+    return;
+  }
+  
+  recognition = new SR();
+  recognition.lang = 'fr-FR';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+  
+  recognition.onstart = () => {
+    isListening = true;
+    if(micBtn) micBtn.classList.add('listening');
+    if(statusEl){statusEl.style.display='block';statusEl.textContent='🎙️ PARLEZ MAINTENANT... (ex: «Carrefour Dillon courses 87 euros»)';statusEl.classList.add('listening-active');}
+  };
+  
+  recognition.onresult = (event) => {
+    const transcript = event.results[0][0].transcript;
+    const isFinal = event.results[0].isFinal;
+    
+    if (isFinal) {
+      const parsed = parseInvoiceVoice(transcript);
+      if(parsed.vendor) $('i-vendor').value = parsed.vendor;
+      if(parsed.label) $('i-label').value = parsed.label;
+      if(parsed.amount) $('i-amount').value = Math.round(parsed.amount * 100) / 100;
+      
+      // Auto-catégorisation basée sur le vendeur/label
+      const sel = $('i-cat');
+      if (sel && (parsed.vendor || parsed.label)) {
+        const searchText = (parsed.vendor + ' ' + parsed.label).toLowerCase();
+        const dict = S.mode === 'pro' ? DICT_PRO : DICT_PERSO;
+        const sortedKeys = Object.keys(dict).sort((a, b) => b.length - a.length);
+        for (const key of sortedKeys) {
+          if (searchText.includes(key.toLowerCase())) {
+            sel.value = dict[key];
+            break;
+          }
+        }
+      }
+      
+      const parts = [];
+      if(parsed.vendor) parts.push(`📍 ${parsed.vendor}`);
+      if(parsed.label) parts.push(`"${parsed.label}"`);
+      if(parsed.amount) parts.push(fmt(parsed.amount));
+      if(statusEl){statusEl.textContent=`✅ ${parts.join(' — ') || transcript}`;statusEl.classList.remove('listening-active');}
+      
+      try { recognition.stop(); } catch(e) {}
+      isListening = false;
+      if(micBtn) micBtn.classList.remove('listening');
+    } else {
+      if(statusEl){statusEl.style.display='block';statusEl.textContent=`🎙️ "${transcript}"...`;}
+    }
+  };
+  
+  recognition.onerror = (event) => {
+    isListening = false;
+    if(micBtn) micBtn.classList.remove('listening');
+    if(event.error === 'no-speech'){
+      if(statusEl){statusEl.textContent='🔇 Aucune voix détectée';}
+    } else if(event.error === 'not-allowed'){
+      if(statusEl){statusEl.textContent='🚫 Accès micro refusé';}
+    } else {
+      if(statusEl){statusEl.textContent=`❌ Erreur: ${event.error}`;}
+    }
+  };
+  
+  recognition.onend = () => {
+    isListening = false;
+    if(micBtn) micBtn.classList.remove('listening');
+    try { recognition.abort(); } catch(e) {}
+    recognition = null;
+  };
+  
+  recognition.start();
 }
 
 // ─── Voice search ───
