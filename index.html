@@ -349,6 +349,74 @@ svg text{font-family:var(--fb)}
   </div>
 </div></div>
 
+<!-- Bon d'achat / carte cadeau / coupon -->
+<div class="mo" id="m-voucher"><div class="md" style="max-width:440px">
+  <div class="mh"><span class="mt">🎟️ Nouveau bon / avantage</span><button class="mc" onclick="cm('m-voucher')">✕</button></div>
+  <div class="mf">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px">
+      <button id="vt-bon" class="btn vt-btn" style="flex:1;font-size:12px;padding:8px" onclick="setVoucherType('bon')">🎟️ Bon d'achat</button>
+      <button id="vt-carte" class="btn vt-btn" style="flex:1;font-size:12px;padding:8px" onclick="setVoucherType('carte')">💳 Carte cadeau</button>
+      <button id="vt-coupon" class="btn vt-btn" style="flex:1;font-size:12px;padding:8px" onclick="setVoucherType('coupon')">🏷️ Coupon</button>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input id="v-label" placeholder="Libellé (ex: Bon Carrefour 10€)" style="flex:1">
+      <button class="mic-btn-ui" onclick="startVoiceFor('v-label','v-amount')" title="Dicter">🎤</button>
+    </div>
+    <div class="voice-status-generic" data-for="v-label" style="display:none"></div>
+    <input id="v-store" placeholder="Magasin / enseigne (ex: Carrefour Dillon)">
+    <div id="v-amount-row" style="display:flex;gap:8px">
+      <input id="v-amount" placeholder="Montant (€)" type="number" step="0.01" style="flex:1">
+    </div>
+    <div id="v-pct-row" style="display:none">
+      <input id="v-pct" placeholder="Réduction (%)" type="number" step="1" min="0" max="100">
+    </div>
+    <input id="v-code" placeholder="Code / référence (optionnel)">
+    <div style="display:flex;gap:8px">
+      <div style="flex:1"><label style="font-size:11px;color:var(--t4)">Obtenu le</label><input id="v-obtained" type="date"></div>
+      <div style="flex:1"><label style="font-size:11px;color:var(--t4)">Expire le</label><input id="v-expires" type="date"></div>
+    </div>
+    <input id="v-notes" placeholder="Notes (optionnel)">
+    <div>
+      <label style="font-size:11px;color:var(--t4);display:block;margin-bottom:4px">📷 Photo (optionnel)</label>
+      <input id="v-photo-input" type="file" accept="image/*" style="font-size:12px;padding:6px;width:100%" onchange="handleVoucherPhoto(this)">
+      <div id="v-photo-preview" style="margin-top:8px"></div>
+    </div>
+    <button class="btn bv" onclick="addVoucher()">Enregistrer le bon</button>
+  </div>
+</div></div>
+
+<!-- Facture -->
+<div class="mo" id="m-invoice"><div class="md" style="max-width:440px">
+  <div class="mh"><span class="mt">🧾 Nouvelle facture</span><button class="mc" onclick="cm('m-invoice')">✕</button></div>
+  <div class="mf">
+    <div style="display:flex;gap:8px;align-items:center">
+      <input id="i-label" placeholder="Libellé (ex: Achat micro-ondes)" style="flex:1">
+      <button class="mic-btn-ui" onclick="startVoiceFor('i-label','i-amount')" title="Dicter">🎤</button>
+    </div>
+    <div class="voice-status-generic" data-for="i-label" style="display:none"></div>
+    <input id="i-vendor" placeholder="Vendeur / magasin (ex: But Lamentin)">
+    <input id="i-amount" placeholder="Montant TTC (€)" type="number" step="0.01">
+    <div style="display:flex;gap:8px">
+      <div style="flex:1"><label style="font-size:11px;color:var(--t4)">Date</label><input id="i-date" type="date"></div>
+      <div style="flex:1"><label style="font-size:11px;color:var(--t4)">Catégorie</label><select id="i-cat"></select></div>
+    </div>
+    <input id="i-notes" placeholder="Notes (optionnel)">
+    <div>
+      <label style="font-size:11px;color:var(--t4);display:block;margin-bottom:4px">📷 Photos de la facture</label>
+      <input id="i-photo-input" type="file" accept="image/*" style="font-size:12px;padding:6px;width:100%" onchange="handleInvoicePhoto(this)">
+      <div style="font-size:10px;color:var(--t4);margin-top:4px">💡 Tu peux ajouter plusieurs pages (recto/verso, factures longues)</div>
+      <div id="i-photo-preview" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+    <button class="btn bbl" onclick="addInvoice()">Enregistrer la facture</button>
+  </div>
+</div></div>
+
+<!-- Visualisation facture -->
+<div class="mo" id="m-invoice-view"><div class="md" style="max-width:520px">
+  <div class="mh"><span class="mt" id="iv-title">🧾 Facture</span><button class="mc" onclick="cm('m-invoice-view')">✕</button></div>
+  <div id="iv-body" style="max-height:70vh;overflow-y:auto"></div>
+</div></div>
+
 <!-- Confirmation suppression -->
 <div class="mo" id="m-confirm"><div class="md" style="max-width:360px">
   <div class="mh"><span class="mt">⚠️ Confirmation</span><button class="mc" onclick="cm('m-confirm')">✕</button></div>
@@ -419,6 +487,7 @@ svg text{font-family:var(--fb)}
 </div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const MO=["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
 const DY=["Lun","Mar","Mer","Jeu","Ven","Sam","Dim"];
@@ -645,9 +714,348 @@ function autoCat(val) {
   }, 600);
 }
 
+// ─── BONS D'ACHAT & FACTURES — Helpers ───
+
+// Compresse une image (File ou Blob) en base64 JPEG, max 1200px de large, qualité 0.7
+// Réduit ~4 Mo → ~150 Ko en moyenne pour rester sous la limite localStorage
+function compressImage(file, maxWidth = 1200, quality = 0.7) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const ratio = img.width > maxWidth ? maxWidth / img.width : 1;
+        const w = Math.round(img.width * ratio);
+        const h = Math.round(img.height * ratio);
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Calcule le nombre de jours entre aujourd'hui et une date donnée (YYYY-MM-DD)
+// Retourne nombre négatif si la date est passée
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const target = new Date(dateStr + 'T23:59:59');
+  const now = new Date();
+  return Math.ceil((target - now) / (1000 * 60 * 60 * 24));
+}
+
+// Récupère tous les bons qui expirent dans <= N jours et qui ne sont pas utilisés
+function getExpiringVouchers(days = 30) {
+  return (S.vouchers || []).filter(v => {
+    if (v.used || v.mode !== S.mode) return false;
+    const d = daysUntil(v.expires);
+    return d !== null && d >= 0 && d <= days;
+  });
+}
+
+// Récupère tous les bons expirés non utilisés
+function getExpiredVouchers() {
+  return (S.vouchers || []).filter(v => {
+    if (v.used || v.mode !== S.mode) return false;
+    const d = daysUntil(v.expires);
+    return d !== null && d < 0;
+  });
+}
+
+// Génère un PDF à partir d'un tableau de pages (data URLs)
+// Utilise jsPDF chargé via CDN
+function generateInvoicePDF(pages, filename) {
+  if (typeof jspdf === 'undefined') {
+    showToast('Module PDF en cours de chargement...');
+    return;
+  }
+  const { jsPDF } = jspdf;
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  pages.forEach((dataUrl, idx) => {
+    if (idx > 0) pdf.addPage();
+    // A4 dimensions: 210x297mm. On centre l'image avec marges
+    const imgProps = pdf.getImageProperties(dataUrl);
+    const pdfWidth = 200; // 5mm marge de chaque côté
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    const finalHeight = Math.min(pdfHeight, 287);
+    const finalWidth = (imgProps.width * finalHeight) / imgProps.height;
+    const x = (210 - finalWidth) / 2;
+    const y = (297 - Math.min(pdfHeight, 287)) / 2;
+    pdf.addImage(dataUrl, 'JPEG', x, y, finalWidth, Math.min(pdfHeight, 287));
+  });
+  pdf.save(filename || 'facture.pdf');
+}
+
+// ─── BONS D'ACHAT — Logique ───
+
+let currentVoucherType = 'bon';      // 'bon' | 'carte' | 'coupon'
+let currentVoucherPhoto = null;      // base64 photo en cours d'upload
+
+function setVoucherType(type) {
+  currentVoucherType = type;
+  // Toggle visuel des boutons
+  ['bon','carte','coupon'].forEach(t => {
+    const btn = $('vt-' + t);
+    if (btn) {
+      if (t === type) {
+        btn.style.background = 'var(--blue)';
+        btn.style.color = '#fff';
+      } else {
+        btn.style.background = 'rgba(255,255,255,0.06)';
+        btn.style.color = 'var(--t2)';
+      }
+    }
+  });
+  // Affiche montant € ou réduction %
+  const amtRow = $('v-amount-row');
+  const pctRow = $('v-pct-row');
+  if (type === 'coupon') {
+    if (amtRow) amtRow.style.display = 'none';
+    if (pctRow) pctRow.style.display = 'block';
+  } else {
+    if (amtRow) amtRow.style.display = 'flex';
+    if (pctRow) pctRow.style.display = 'none';
+  }
+}
+
+async function handleVoucherPhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  try {
+    showToast('Compression photo en cours...');
+    const compressed = await compressImage(input.files[0]);
+    currentVoucherPhoto = compressed;
+    const preview = $('v-photo-preview');
+    if (preview) {
+      preview.innerHTML = `<div style="position:relative;display:inline-block">
+        <img src="${compressed}" style="max-width:120px;max-height:120px;border-radius:6px;border:1px solid rgba(255,255,255,0.12)">
+        <button onclick="removeVoucherPhoto()" style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:11px">✕</button>
+      </div>`;
+    }
+  } catch (e) {
+    showToast('❌ Erreur de chargement de la photo');
+    console.error(e);
+  }
+}
+
+function removeVoucherPhoto() {
+  currentVoucherPhoto = null;
+  const preview = $('v-photo-preview');
+  if (preview) preview.innerHTML = '';
+  const input = $('v-photo-input');
+  if (input) input.value = '';
+}
+
+function addVoucher() {
+  const label = $('v-label').value.trim();
+  const store = $('v-store').value.trim();
+  const expires = $('v-expires').value;
+  if (!label || !expires) {
+    showToast('⚠️ Libellé et date d\'expiration requis');
+    return;
+  }
+  let amount = null, pct = null;
+  if (currentVoucherType === 'coupon') {
+    pct = parseFloat($('v-pct').value) || null;
+  } else {
+    amount = parseFloat($('v-amount').value) || null;
+  }
+  const obtained = $('v-obtained').value || new Date().toISOString().slice(0, 10);
+  const code = $('v-code').value.trim();
+  const notes = $('v-notes').value.trim();
+  S.vouchers.push({
+    id: gid(),
+    type: currentVoucherType,
+    label, store, amount, pct, code,
+    obtained, expires, used: false,
+    photo: currentVoucherPhoto,
+    notes,
+    mode: S.mode
+  });
+  // Reset
+  ['v-label','v-store','v-amount','v-pct','v-code','v-notes','v-obtained','v-expires'].forEach(id => {
+    const el = $(id); if (el) el.value = '';
+  });
+  removeVoucherPhoto();
+  setVoucherType('bon');
+  cm('m-voucher');
+  sv();
+  R();
+  showToast('✅ Bon enregistré');
+}
+
+function deleteVoucher(id) {
+  showConfirm('Supprimer ce bon ?', () => {
+    S.vouchers = S.vouchers.filter(v => v.id !== id);
+    sv(); R();
+    showToast('🗑️ Bon supprimé');
+  });
+}
+
+function toggleVoucherUsed(id) {
+  const v = S.vouchers.find(x => x.id === id);
+  if (!v) return;
+  v.used = !v.used;
+  sv(); R();
+  showToast(v.used ? '✅ Marqué comme utilisé' : '↺ Remis comme actif');
+}
+
+// ─── FACTURES — Logique ───
+
+let currentInvoicePages = []; // tableau de base64 photos
+
+async function handleInvoicePhoto(input) {
+  if (!input.files || !input.files[0]) return;
+  try {
+    showToast('Compression photo en cours...');
+    const compressed = await compressImage(input.files[0]);
+    currentInvoicePages.push(compressed);
+    renderInvoicePhotoPreviews();
+    // Reset input pour permettre d'ajouter une autre photo
+    input.value = '';
+  } catch (e) {
+    showToast('❌ Erreur de chargement');
+    console.error(e);
+  }
+}
+
+function renderInvoicePhotoPreviews() {
+  const preview = $('i-photo-preview');
+  if (!preview) return;
+  preview.innerHTML = currentInvoicePages.map((p, idx) => `
+    <div style="position:relative;display:inline-block">
+      <img src="${p}" style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,0.12)">
+      <div style="position:absolute;top:2px;left:2px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;padding:1px 4px;border-radius:3px">P${idx+1}</div>
+      <button onclick="removeInvoicePage(${idx})" style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;width:20px;height:20px;border-radius:50%;cursor:pointer;font-size:10px">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeInvoicePage(idx) {
+  currentInvoicePages.splice(idx, 1);
+  renderInvoicePhotoPreviews();
+}
+
+function addInvoice() {
+  const label = $('i-label').value.trim();
+  const vendor = $('i-vendor').value.trim();
+  const amount = parseFloat($('i-amount').value);
+  const date = $('i-date').value || new Date().toISOString().slice(0, 10);
+  const cat = parseInt($('i-cat').value) || 7;
+  const notes = $('i-notes').value.trim();
+  if (!label || !amount) {
+    showToast('⚠️ Libellé et montant requis');
+    return;
+  }
+  if (currentInvoicePages.length === 0) {
+    showToast('⚠️ Ajoute au moins une photo');
+    return;
+  }
+  S.invoices.push({
+    id: gid(),
+    label, vendor, amount, date, cat, notes,
+    pages: [...currentInvoicePages],
+    mode: S.mode
+  });
+  // Reset
+  ['i-label','i-vendor','i-amount','i-date','i-notes'].forEach(id => {
+    const el = $(id); if (el) el.value = '';
+  });
+  currentInvoicePages = [];
+  renderInvoicePhotoPreviews();
+  cm('m-invoice');
+  sv(); R();
+  showToast('✅ Facture enregistrée');
+}
+
+function deleteInvoice(id) {
+  showConfirm('Supprimer cette facture et toutes ses photos ?', () => {
+    S.invoices = S.invoices.filter(i => i.id !== id);
+    sv(); R();
+    showToast('🗑️ Facture supprimée');
+  });
+}
+
+function viewInvoice(id) {
+  const inv = S.invoices.find(i => i.id === id);
+  if (!inv) return;
+  $('iv-title').textContent = '🧾 ' + inv.label;
+  const body = $('iv-body');
+  if (!body) return;
+  const cycleLabel = MO[parseInt(inv.date.slice(5,7))-1] + ' ' + inv.date.slice(0,4);
+  body.innerHTML = `
+    <div style="padding:14px">
+      <div style="background:rgba(255,255,255,0.04);padding:12px;border-radius:8px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="color:var(--t4);font-size:12px">Vendeur</span>
+          <span style="font-weight:600">${inv.vendor || '—'}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="color:var(--t4);font-size:12px">Date</span>
+          <span style="font-weight:600">${inv.date}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+          <span style="color:var(--t4);font-size:12px">Montant TTC</span>
+          <span style="font-weight:700;color:var(--red)">${fmt(inv.amount)}</span>
+        </div>
+        ${inv.notes ? `<div style="border-top:1px solid rgba(255,255,255,0.06);padding-top:8px;margin-top:8px;font-size:12px;color:var(--t2)">${inv.notes}</div>` : ''}
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="btn bbl" onclick="exportInvoicePDF('${inv.id}')" style="flex:1;font-size:12px;padding:10px">📄 Télécharger en PDF</button>
+        <button class="btn" onclick="deleteInvoice('${inv.id}');cm('m-invoice-view')" style="background:var(--red);color:#fff;font-size:12px;padding:10px">🗑️ Supprimer</button>
+      </div>
+      <div style="font-size:11px;color:var(--t4);margin-bottom:6px">${inv.pages.length} page${inv.pages.length>1?'s':''}</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${inv.pages.map((p, idx) => `
+          <div style="position:relative">
+            <div style="position:absolute;top:6px;left:6px;background:rgba(0,0,0,0.7);color:#fff;font-size:10px;padding:2px 6px;border-radius:3px;z-index:1">Page ${idx+1}</div>
+            <img src="${p}" style="width:100%;border-radius:8px;border:1px solid rgba(255,255,255,0.08)">
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+  om('m-invoice-view');
+}
+
+function exportInvoicePDF(id) {
+  const inv = S.invoices.find(i => i.id === id);
+  if (!inv) return;
+  const safeName = (inv.label || 'facture').replace(/[^a-zA-Z0-9-_]/g, '_');
+  generateInvoicePDF(inv.pages, `${safeName}_${inv.date}.pdf`);
+  showToast('📄 PDF généré');
+}
+
 // ─── DICTÉE VOCALE ───
 let recognition = null;
 let isListening = false;
+
+// Libère immédiatement le micro quand l'app passe en arrière-plan
+// (ex: tu reçois un appel, tu changes d'app, l'écran s'éteint).
+// Sans ça, certaines voitures (Bluetooth Mycar, etc.) restent bloquées en mode "appel".
+function releaseVoiceSession() {
+  if (recognition) {
+    try { recognition.stop(); } catch(e) {}
+    try { recognition.abort(); } catch(e) {}
+    recognition = null;
+  }
+  isListening = false;
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) releaseVoiceSession();
+});
+window.addEventListener('blur', releaseVoiceSession);
+window.addEventListener('pagehide', releaseVoiceSession);
+window.addEventListener('beforeunload', releaseVoiceSession);
 
 // Corrections phonétiques pour les mots que Safari confond systématiquement
 // Clé = ce que Safari transcrit (mauvais), Valeur = le bon mot
@@ -795,6 +1203,9 @@ function startVoice() {
   recognition.onend = () => {
     isListening = false;
     resetMicBtn();
+    // Libère immédiatement la session audio pour ne pas bloquer Bluetooth voiture
+    try { recognition.abort(); } catch(e) {}
+    recognition = null;
   };
   
   recognition.start();
@@ -1024,6 +1435,9 @@ function startVoiceFor(labelId, amountId) {
   recognition.onend = () => {
     isListening = false;
     if(micBtn) micBtn.classList.remove('listening');
+    // Libère immédiatement la session audio pour ne pas bloquer Bluetooth voiture
+    try { recognition.abort(); } catch(e) {}
+    recognition = null;
   };
   
   recognition.start();
@@ -1144,12 +1558,15 @@ function voiceSearch(){
   recognition.onend = () => {
     isListening = false;
     micBtns.forEach(b=>b.classList.remove('listening'));
+    // Libère immédiatement la session audio pour ne pas bloquer Bluetooth voiture
+    try { recognition.abort(); } catch(e) {}
+    recognition = null;
   };
   
   recognition.start();
 }
 
-function ds(){const n=new Date();return{mode:"perso",yr:n.getFullYear(),mo:n.getMonth(),tab:"budget",tx:[],inc:[],bgt:{},hab:[],hl:{},rec:[],inst:[]};}
+function ds(){const n=new Date();return{mode:"perso",yr:n.getFullYear(),mo:n.getMonth(),tab:"budget",tx:[],inc:[],bgt:{},hab:[],hl:{},rec:[],inst:[],vouchers:[],invoices:[]};}
 function ld(){try{const s=localStorage.getItem(SK);return s?JSON.parse(s):null}catch(e){return null}}
 function sv(){localStorage.setItem(SK,JSON.stringify(S))}
 function gid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -1160,6 +1577,8 @@ S=ld()||ds();
 // Migrate old data
 if(!S.rec) S.rec=[];
 if(!S.inst) S.inst=[];
+if(!S.vouchers) S.vouchers=[];
+if(!S.invoices) S.invoices=[];
 if(S._priv===undefined) S._priv=true;
 if(!S.theme) S.theme='dark';
 if(!S.goals) S.goals=[];
@@ -1419,6 +1838,142 @@ if(!S._demo){
   sv();
 }
 
+// ─── ALERTES — Section affichée en haut du dashboard si urgences ───
+
+function getAlertsHTML() {
+  const expiring = getExpiringVouchers(30);
+  const expired = getExpiredVouchers();
+  if (expiring.length === 0 && expired.length === 0) return '';
+  return `<div class="card fi fd1" style="border:1px solid rgba(239,71,111,0.3);background:rgba(239,71,111,0.06)">
+    <div class="ctitle" style="color:var(--red)">🚨 Alertes — ${expiring.length + expired.length}</div>
+    ${expired.length > 0 ? `
+      <div style="margin-top:8px;font-size:12px;color:var(--t2);margin-bottom:6px">⏰ Expiré${expired.length>1?'s':''} (${expired.length})</div>
+      ${expired.map(v => `
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(239,71,111,0.1);border-radius:8px;margin-bottom:4px">
+          <span style="font-size:14px">${v.type==='bon'?'🎟️':v.type==='carte'?'💳':'🏷️'}</span>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:500;color:var(--t1)">${v.label}</div>
+            <div style="font-size:10px;color:var(--red)">Expiré le ${v.expires}</div>
+          </div>
+          <button class="bgh" style="font-size:10px;padding:4px 8px" onclick="toggleVoucherUsed('${v.id}')">Marquer utilisé</button>
+        </div>
+      `).join('')}
+    ` : ''}
+    ${expiring.length > 0 ? `
+      <div style="margin-top:8px;font-size:12px;color:var(--t2);margin-bottom:6px">⚠️ Expire bientôt (${expiring.length})</div>
+      ${expiring.map(v => {
+        const d = daysUntil(v.expires);
+        const urgency = d <= 7 ? 'var(--red)' : d <= 15 ? 'var(--yellow)' : 'var(--blue)';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:4px">
+          <span style="font-size:14px">${v.type==='bon'?'🎟️':v.type==='carte'?'💳':'🏷️'}</span>
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:500;color:var(--t1)">${v.label}</div>
+            <div style="font-size:10px;color:var(--t4)">${v.store || '—'} · ${v.amount ? fmt(v.amount) : (v.pct ? v.pct+'%' : '')}</div>
+          </div>
+          <span style="font-size:10px;padding:3px 8px;border-radius:6px;background:${urgency}22;color:${urgency};font-weight:600">${d===0?'Auj.':d===1?'Demain':d+' j'}</span>
+        </div>`;
+      }).join('')}
+    ` : ''}
+  </div>`;
+}
+
+// ─── BONS D'ACHAT — Section dashboard ───
+
+function getVouchersHTML() {
+  const modeVouchers = (S.vouchers || []).filter(v => v.mode === S.mode && !v.used);
+  if (modeVouchers.length === 0) {
+    return `<div class="card fi fd2">
+      <div class="section-toggle" onclick="toggleSection('vouchers')">
+        <span class="ctitle" style="margin:0">🎟️ Bons & avantages (0)</span>
+        <span class="chevron ${sectionStates['vouchers']?'':'open'}" data-chev="vouchers">▼</span>
+      </div>
+      <div class="section-body ${sectionStates['vouchers']?'collapsed':''}" data-section="vouchers" style="max-height:2000px">
+        <div style="padding:20px 0;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">🎟️</div>
+          <div style="font-size:13px;color:var(--t2);margin-bottom:14px">Aucun bon d'achat, carte cadeau ou coupon</div>
+          <button class="btn bv" onclick="om('m-voucher')" style="font-size:12px;padding:8px 16px">+ Ajouter un bon</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  // Trier par date d'expiration croissante
+  modeVouchers.sort((a, b) => (a.expires || '').localeCompare(b.expires || ''));
+  return `<div class="card fi fd2">
+    <div class="section-toggle" onclick="toggleSection('vouchers')">
+      <span class="ctitle" style="margin:0">🎟️ Bons & avantages (${modeVouchers.length})</span>
+      <span class="chevron ${sectionStates['vouchers']?'':'open'}" data-chev="vouchers">▼</span>
+    </div>
+    <div class="section-body ${sectionStates['vouchers']?'collapsed':''}" data-section="vouchers" style="max-height:3000px">
+    ${modeVouchers.map(v => {
+      const d = daysUntil(v.expires);
+      const urgency = d === null ? 'var(--t4)' : d < 0 ? 'var(--red)' : d <= 7 ? 'var(--red)' : d <= 30 ? 'var(--yellow)' : 'var(--green)';
+      const urgencyText = d === null ? '—' : d < 0 ? 'Expiré' : d === 0 ? 'Auj.' : d === 1 ? 'Demain' : d + ' j';
+      const icon = v.type === 'bon' ? '🎟️' : v.type === 'carte' ? '💳' : '🏷️';
+      const valueText = v.amount ? fmt(v.amount) : (v.pct ? '-' + v.pct + '%' : '');
+      return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:6px">
+        <span style="font-size:18px">${icon}</span>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--t1);overflow:hidden;text-overflow:ellipsis">${v.label}</div>
+          <div style="font-size:11px;color:var(--t4);margin-top:2px">${v.store || '—'}${v.code ? ' · '+v.code : ''}</div>
+          ${v.notes ? `<div style="font-size:10px;color:var(--t4);margin-top:2px;font-style:italic">${v.notes}</div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+          <span style="font-family:var(--fd);font-size:13px;font-weight:700;color:var(--t1)">${valueText}</span>
+          <span style="font-size:10px;padding:2px 6px;border-radius:5px;background:${urgency}22;color:${urgency};font-weight:600">${urgencyText}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <button class="bgh" style="font-size:10px;padding:3px 6px" onclick="toggleVoucherUsed('${v.id}')" title="Marquer utilisé">✓</button>
+          <button class="bgh" style="font-size:10px;padding:3px 6px" onclick="deleteVoucher('${v.id}')" title="Supprimer">✕</button>
+        </div>
+      </div>`;
+    }).join('')}
+    <button class="btn bv" onclick="om('m-voucher')" style="width:100%;margin-top:8px;font-size:12px;padding:8px">+ Ajouter un bon</button>
+    </div>
+  </div>`;
+}
+
+// ─── FACTURES — Section dashboard ───
+
+function getInvoicesHTML() {
+  const modeInvoices = (S.invoices || []).filter(i => i.mode === S.mode);
+  if (modeInvoices.length === 0) {
+    return `<div class="card fi fd3">
+      <div class="section-toggle" onclick="toggleSection('invoices')">
+        <span class="ctitle" style="margin:0">🧾 Mes factures (0)</span>
+        <span class="chevron ${sectionStates['invoices']?'':'open'}" data-chev="invoices">▼</span>
+      </div>
+      <div class="section-body ${sectionStates['invoices']?'collapsed':''}" data-section="invoices" style="max-height:2000px">
+        <div style="padding:20px 0;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">🧾</div>
+          <div style="font-size:13px;color:var(--t2);margin-bottom:14px">Aucune facture archivée</div>
+          <button class="btn bbl" onclick="om('m-invoice')" style="font-size:12px;padding:8px 16px">+ Ajouter une facture</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  // Trier par date décroissante
+  modeInvoices.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  return `<div class="card fi fd3">
+    <div class="section-toggle" onclick="toggleSection('invoices')">
+      <span class="ctitle" style="margin:0">🧾 Mes factures (${modeInvoices.length})</span>
+      <span class="chevron ${sectionStates['invoices']?'':'open'}" data-chev="invoices">▼</span>
+    </div>
+    <div class="section-body ${sectionStates['invoices']?'collapsed':''}" data-section="invoices" style="max-height:3000px">
+    ${modeInvoices.map(inv => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(255,255,255,0.03);border-radius:8px;margin-bottom:6px;cursor:pointer" onclick="viewInvoice('${inv.id}')">
+        <img src="${inv.pages[0]}" style="width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,0.08)">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:600;color:var(--t1);overflow:hidden;text-overflow:ellipsis">${inv.label}</div>
+          <div style="font-size:11px;color:var(--t4)">${inv.vendor || '—'} · ${inv.date} · ${inv.pages.length}p</div>
+        </div>
+        <span style="font-family:var(--fd);font-size:14px;font-weight:700;color:var(--red)">${fmt(inv.amount)}</span>
+      </div>
+    `).join('')}
+    <button class="btn bbl" onclick="om('m-invoice')" style="width:100%;margin-top:8px;font-size:12px;padding:8px">+ Ajouter une facture</button>
+    </div>
+  </div>`;
+}
+
 // ─── Modals ───
 function om(id){
   document.getElementById(id).classList.add('open');
@@ -1452,6 +2007,28 @@ function om(id){
   if(id==='m-goal'){
     $('goal-name').value='';$('goal-target').value='';$('goal-saved').value='';
   }
+  if(id==='m-voucher'){
+    ['v-label','v-store','v-amount','v-pct','v-code','v-notes'].forEach(f=>{const e=$(f);if(e)e.value='';});
+    const today=new Date().toISOString().slice(0,10);
+    if($('v-obtained')) $('v-obtained').value=today;
+    if($('v-expires')) $('v-expires').value='';
+    removeVoucherPhoto();
+    setVoucherType('bon');
+  }
+  if(id==='m-invoice'){
+    ['i-label','i-vendor','i-amount','i-notes'].forEach(f=>{const e=$(f);if(e)e.value='';});
+    const today=new Date().toISOString().slice(0,10);
+    if($('i-date')) $('i-date').value=today;
+    currentInvoicePages=[];
+    renderInvoicePhotoPreviews();
+    // Peupler le select catégorie
+    const sel=$('i-cat');
+    if(sel){
+      const cats=CATS[S.mode]||[];
+      sel.innerHTML=cats.map((c,i)=>`<option value="${i}">${c.i} ${c.n}</option>`).join('');
+      sel.value=7; // Divers par défaut
+    }
+  }
 }
 function cm(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.mo').forEach(el=>{el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open')})});
@@ -1478,7 +2055,7 @@ function showToast(msg, color='var(--green)', duration=3000){
 }
 
 // ─── Collapsible sections ───
-const sectionStates={rec:true,tx:true,subs:true,goals:true};
+const sectionStates={rec:true,tx:true,subs:true,goals:true,vouchers:true,invoices:true};
 function toggleSection(id){
   sectionStates[id]=!sectionStates[id];
   const body=document.querySelector(`[data-section="${id}"]`);
@@ -2527,6 +3104,8 @@ function RB(cats){
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="showIncDetail()">💵 Détail revenus</button>
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="showCatManager()">⚙️ Gérer catégories</button>
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="openGoalModal()">🎯 Objectif épargne</button>
+      <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="om('m-voucher')">🎟️ Bon / coupon</button>
+      <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="om('m-invoice')">🧾 Facture</button>
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="exportData()">💾 Sauvegarder</button>
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="triggerImport()">📂 Restaurer</button>
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="showExportModal()">📊 Exporter Excel</button>
@@ -2539,7 +3118,10 @@ function RB(cats){
       </div>`:''}
     </div>
 
+    ${getAlertsHTML()}
     ${getGoalsHTML()}
+    ${getVouchersHTML()}
+    ${getInvoicesHTML()}
 
     ${(modeRec.length>0||modeInst.length>0)?`
     <div class="card fi fd3">
