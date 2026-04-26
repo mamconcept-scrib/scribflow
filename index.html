@@ -1002,7 +1002,7 @@ function addVoucher() {
   const obtained = $('v-obtained').value || new Date().toISOString().slice(0, 10);
   const code = $('v-code').value.trim();
   const notes = $('v-notes').value.trim();
-  S.vouchers.push({
+  const newVoucher = {
     id: gid(),
     type: currentVoucherType,
     label, store, amount, pct, code,
@@ -1010,20 +1010,21 @@ function addVoucher() {
     photo: currentVoucherPhoto,
     notes,
     mode: S.mode
-  });
-  // Apprend automatiquement le magasin/enseigne saisi
+  };
+  S.vouchers.push(newVoucher);
+  debugLog('ADD-VOUCHER', `${label} (${store||'-'}) → S.vouchers count=${S.vouchers.length}`);
   if (store) {
     const catGuess = localCat(store);
     learnVendor(store, catGuess ? catGuess.idx : 7);
   }
-  // Reset
   ['v-label','v-store','v-amount','v-pct','v-code','v-notes','v-obtained','v-expires'].forEach(id => {
     const el = $(id); if (el) el.value = '';
   });
   removeVoucherPhoto();
   setVoucherType('bon');
   cm('m-voucher');
-  sv();
+  const saved = sv();
+  debugLog('ADD-VOUCHER', `sv() returned ${saved}, verify=${(JSON.parse(localStorage.getItem(SK)||'{}').vouchers||[]).length}`);
   R();
   showToast('✅ Bon enregistré');
 }
@@ -1976,13 +1977,29 @@ function voiceSearch(){
 }
 
 function ds(){const n=new Date();return{mode:"perso",yr:n.getFullYear(),mo:n.getMonth(),tab:"budget",tx:[],inc:[],bgt:{},hab:[],hl:{},rec:[],inst:[],vouchers:[],invoices:[],userDict:{}};}
-function ld(){try{const s=localStorage.getItem(SK);return s?JSON.parse(s):null}catch(e){console.error('Erreur chargement localStorage:',e);return null}}
+function ld(){
+  try{
+    const s=localStorage.getItem(SK);
+    debugLog('LD', s ? `Loaded ${s.length} chars` : 'No data');
+    if(!s) return null;
+    const parsed = JSON.parse(s);
+    debugLog('LD', `Parsed: ${(parsed.vouchers||[]).length} bons, ${(parsed.tx||[]).length} tx`);
+    return parsed;
+  } catch(e) {
+    debugLog('LD-ERR', e.message);
+    console.error('Erreur chargement localStorage:',e);
+    return null;
+  }
+}
 
 function sv(){
   try {
-    localStorage.setItem(SK, JSON.stringify(S));
+    const json = JSON.stringify(S);
+    localStorage.setItem(SK, json);
+    debugLog('SV', `Saved ${json.length} chars, ${(S.vouchers||[]).length} bons, ${(S.tx||[]).length} tx`);
     return true;
   } catch (e) {
+    debugLog('SV-ERR', e.name + ': ' + e.message);
     console.error('ERREUR SAUVEGARDE:', e.name, e.message);
     if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED' || (e.code && (e.code === 22 || e.code === 1014))) {
       try {
@@ -1993,6 +2010,31 @@ function sv(){
     }
     return false;
   }
+}
+
+// ─── Debug logger persistant (stocké séparément du state principal) ───
+function debugLog(action, msg) {
+  try {
+    const k = 'scribflow_debuglog';
+    const now = new Date().toISOString().slice(11, 19);
+    let log = [];
+    try { log = JSON.parse(localStorage.getItem(k) || '[]'); } catch(_) {}
+    log.push(`${now} [${action}] ${msg}`);
+    if (log.length > 50) log = log.slice(-50);
+    localStorage.setItem(k, JSON.stringify(log));
+  } catch(_) {}
+}
+
+function getDebugLog() {
+  try {
+    return JSON.parse(localStorage.getItem('scribflow_debuglog') || '[]');
+  } catch(_) {
+    return [];
+  }
+}
+
+function clearDebugLog() {
+  try { localStorage.removeItem('scribflow_debuglog'); } catch(_) {}
 }
 
 function getStorageStats() {
@@ -2089,6 +2131,22 @@ function showStorageDiag() {
       <div style="background:rgba(239,71,111,0.12);border:1px solid var(--red);padding:10px;border-radius:8px;font-size:12px;color:var(--red)">
         🚨 <strong>STOCKAGE BIENTÔT PLEIN !</strong> Sauvegarde ton backup JSON et supprime des données.
       </div>` : ''}
+      
+      <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-weight:600">📜 Journal d'activité (50 dernières)</div>
+          <button onclick="clearDebugLog();showStorageDiag();" style="background:rgba(255,255,255,0.1);border:none;color:var(--t2);font-size:10px;padding:4px 8px;border-radius:5px;cursor:pointer">Vider</button>
+        </div>
+        <div style="font-family:monospace;font-size:10px;line-height:1.5;color:var(--t2);max-height:200px;overflow-y:auto;background:rgba(0,0,0,0.3);padding:8px;border-radius:4px">
+          ${getDebugLog().length === 0 ? '<em style="color:var(--t4)">Aucune activité enregistrée</em>' : getDebugLog().map(l => {
+            const color = l.includes('SV-ERR') || l.includes('LD-ERR') ? 'var(--red)' : 
+                          l.includes('SV') ? 'var(--green)' :
+                          l.includes('LD') ? 'var(--blue)' : 'var(--t2)';
+            return `<div style="color:${color}">${l}</div>`;
+          }).reverse().join('')}
+        </div>
+        <div style="font-size:10px;color:var(--t4);margin-top:6px">💡 Affiche-moi ce log si tu rencontres un bug</div>
+      </div>
     </div>
   `;
   showInfoModal('🔧 État du stockage', msg);
@@ -2113,6 +2171,7 @@ function fmt(v){return new Intl.NumberFormat("fr-FR",{style:"currency",currency:
 function dim(y,m){return new Date(y,m+1,0).getDate()}
 
 S=ld()||ds();
+debugLog('INIT', `App started. State has ${(S.vouchers||[]).length} bons, ${(S.tx||[]).length} tx, ${(S.invoices||[]).length} factures`);
 // Migrate old data
 if(!S.rec) S.rec=[];
 if(!S.inst) S.inst=[];
