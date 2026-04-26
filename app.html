@@ -103,9 +103,7 @@ body{background:#000000;background:var(--body-bg);color:var(--t1);font-family:va
 .mt{font-size:18px;font-weight:700}.mc{background:none;border:none;color:var(--t3);font-size:20px;cursor:pointer}
 .mf{display:flex;flex-direction:column;gap:12px}
 .mflbl{font-size:12px;color:var(--t3);margin-bottom:-6px}
-input,select{width:100%;padding:10px 14px;border-radius:var(--rs);border:1px solid var(--input-brd);background:var(--input-bg);color:var(--t1);font-size:14px;font-family:var(--fb);outline:none;box-sizing:border-box;-webkit-appearance:none;appearance:none}
-input[type="date"]{padding-right:8px;min-height:40px}
-select{padding-right:30px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23999' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:10px;min-height:40px}
+input,select{width:100%;padding:10px 14px;border-radius:var(--rs);border:1px solid var(--input-brd);background:var(--input-bg);color:var(--t1);font-size:14px;font-family:var(--fb);outline:none}
 input:focus,select:focus{border-color:var(--t3)}
 select option{background:var(--modal-bg);color:var(--t1)}
 
@@ -133,7 +131,6 @@ svg text{font-family:var(--fb)}
 
 @keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,71,111,0.4)}50%{box-shadow:0 0 0 10px rgba(239,71,111,0)}}
-@keyframes alertPulse{0%,100%{box-shadow:0 0 0 4px rgba(239,71,111,0.08)}50%{box-shadow:0 0 0 6px rgba(239,71,111,0.18)}}
 @keyframes toastIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes toastOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-20px)}}
 .fi{animation:fu .4s ease both}.fd1{animation-delay:.05s}.fd2{animation-delay:.1s}.fd3{animation-delay:.15s}
@@ -261,28 +258,13 @@ svg text{font-family:var(--fb)}
 <div class="mo" id="m-exp"><div class="md"><div class="mh"><span class="mt">Nouvelle dépense</span><button class="mc" onclick="cm('m-exp')">✕</button></div><div class="mf">
   <div id="mb-exp" class="mode-banner"></div>
   <div style="display:flex;gap:8px;align-items:center">
-    <input id="el" placeholder="Libellé (ex: Courses, Essence, Restaurant...)" oninput="onExpLabelInput(this.value)" style="flex:1">
+    <input id="el" placeholder="Libellé (ex: Carrefour, Uber, Pharmacie...)" oninput="autoCat(this.value)" style="flex:1">
     <button id="mic-btn" onclick="startVoice()" style="width:44px;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0" title="Dicter la dépense">🎤</button>
   </div>
   <div id="voice-status" style="display:none;font-size:13px;padding:12px 16px;border-radius:10px;background:rgba(239,71,111,0.15);border:1px solid rgba(239,71,111,0.3);color:var(--red);font-weight:600;text-align:center"></div>
-  <div id="vendor-suggest" style="display:none;font-size:12px;padding:8px 12px;border-radius:8px;background:rgba(17,138,178,0.12);border:1px solid rgba(17,138,178,0.3);color:var(--blue)"></div>
   <div id="ai-badge" style="display:none;font-size:11px;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--t3);align-items:center;gap:6px"></div>
-  <input id="ev" placeholder="🏪 Magasin/Vendeur (optionnel — ex: Carrefour Dillon)">
   <input id="ea" placeholder="Montant (€)" type="number" step="0.01">
-  <select id="ec"></select><input id="ed" type="date">
-  <!-- Section pliable : Joindre une facture -->
-  <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:12px;margin-top:4px">
-    <div style="display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none" onclick="toggleExpInvoice()">
-      <span id="exp-inv-chev" style="font-size:11px;color:var(--t3);transition:transform .2s">▶</span>
-      <span style="font-size:13px;color:var(--t2);font-weight:500">📷 Joindre une facture (optionnel)</span>
-    </div>
-    <div id="exp-inv-body" style="display:none;margin-top:10px">
-      <input id="exp-inv-input" type="file" accept="image/*" style="font-size:12px;padding:6px;width:100%" onchange="handleExpInvoicePhoto(this)">
-      <div style="font-size:10px;color:var(--t4);margin-top:4px">💡 Tu peux ajouter plusieurs pages</div>
-      <div id="exp-inv-preview" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:6px"></div>
-    </div>
-  </div>
-  <button class="btn bp" onclick="addExp()">Ajouter</button>
+  <select id="ec"></select><input id="ed" type="date"><button class="btn bp" onclick="addExp()">Ajouter</button>
 </div></div></div>
 
 <!-- Revenu ponctuel -->
@@ -389,9 +371,9 @@ svg text{font-family:var(--fb)}
       <input id="v-pct" placeholder="Réduction (%)" type="number" step="1" min="0" max="100">
     </div>
     <input id="v-code" placeholder="Code / référence (optionnel)">
-    <div style="display:flex;gap:8px;align-items:flex-end">
-      <div style="flex:1;min-width:0"><label style="font-size:11px;color:var(--t4);display:block;margin-bottom:4px">Obtenu le</label><input id="v-obtained" type="date" style="width:100%;box-sizing:border-box"></div>
-      <div style="flex:1;min-width:0"><label style="font-size:11px;color:var(--t4);display:block;margin-bottom:4px">Expire le</label><input id="v-expires" type="date" style="width:100%;box-sizing:border-box"></div>
+    <div style="display:flex;gap:8px">
+      <div style="flex:1"><label style="font-size:11px;color:var(--t4)">Obtenu le</label><input id="v-obtained" type="date"></div>
+      <div style="flex:1"><label style="font-size:11px;color:var(--t4)">Expire le</label><input id="v-expires" type="date"></div>
     </div>
     <input id="v-notes" placeholder="Notes (optionnel)">
     <div>
@@ -409,14 +391,14 @@ svg text{font-family:var(--fb)}
   <div class="mf">
     <div style="display:flex;gap:8px;align-items:center">
       <input id="i-label" placeholder="Libellé (ex: Achat micro-ondes)" style="flex:1">
-      <button class="mic-btn-ui" onclick="startVoiceForInvoice()" title="Dicter (vendeur + libellé + montant)">🎤</button>
+      <button class="mic-btn-ui" onclick="startVoiceFor('i-label','i-amount')" title="Dicter">🎤</button>
     </div>
     <div class="voice-status-generic" data-for="i-label" style="display:none"></div>
     <input id="i-vendor" placeholder="Vendeur / magasin (ex: But Lamentin)">
     <input id="i-amount" placeholder="Montant TTC (€)" type="number" step="0.01">
-    <div style="display:flex;gap:8px;align-items:flex-end">
-      <div style="flex:1;min-width:0"><label style="font-size:11px;color:var(--t4);display:block;margin-bottom:4px">Date</label><input id="i-date" type="date" style="width:100%;box-sizing:border-box"></div>
-      <div style="flex:1;min-width:0"><label style="font-size:11px;color:var(--t4);display:block;margin-bottom:4px">Catégorie</label><select id="i-cat" style="width:100%;box-sizing:border-box"></select></div>
+    <div style="display:flex;gap:8px">
+      <div style="flex:1"><label style="font-size:11px;color:var(--t4)">Date</label><input id="i-date" type="date"></div>
+      <div style="flex:1"><label style="font-size:11px;color:var(--t4)">Catégorie</label><select id="i-cat"></select></div>
     </div>
     <input id="i-notes" placeholder="Notes (optionnel)">
     <div>
@@ -648,29 +630,13 @@ function localCat(label) {
   // Also check the full label
   const full = label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[\s]+/g,'');
   
-  // 1. Check user's past transactions for exact match first
+  // Check user's past transactions for exact match first
   const pastMatch = S.tx.filter(t => t.m === S.mode && t.l.toLowerCase() === label.toLowerCase());
   if (pastMatch.length > 0) {
     return { idx: pastMatch[pastMatch.length - 1].ci, source: 'historique' };
   }
   
-  // 2. Check user-learned dictionary (userDict) — apprend des saisies précédentes
-  if (S.userDict) {
-    const userDictCat = getUserDictCat(label);
-    if (userDictCat !== null && userDictCat !== undefined) {
-      return { idx: userDictCat, source: 'appris' };
-    }
-    // Recherche partielle dans le dico utilisateur
-    for (const w of words) {
-      if (w.length < 3) continue;
-      const userCat = getUserDictCat(w);
-      if (userCat !== null && userCat !== undefined) {
-        return { idx: userCat, source: 'appris' };
-      }
-    }
-  }
-  
-  // 3. Dictionary lookup (intégré)
+  // Dictionary lookup
   for (const w of words) {
     if (w.length < 2) continue;
     if (dict[w] !== undefined) return { idx: dict[w], source: 'auto' };
@@ -708,8 +674,8 @@ async function claudeCat(label) {
 function showBadge(catIdx, source) {
   const badge = $('ai-badge');
   const cat = CATS[S.mode][catIdx];
-  const srcLabel = source === 'historique' ? '📋 Historique' : source === 'IA' ? '🤖 IA Claude' : source === 'appris' ? '📚 Appris' : '⚡ Auto';
-  const srcColor = source === 'historique' ? 'var(--purple)' : source === 'IA' ? 'var(--blue)' : source === 'appris' ? 'var(--warm)' : 'var(--green)';
+  const srcLabel = source === 'historique' ? '📋 Historique' : source === 'IA' ? '🤖 IA Claude' : '⚡ Auto';
+  const srcColor = source === 'historique' ? 'var(--purple)' : source === 'IA' ? 'var(--blue)' : 'var(--green)';
   badge.style.display = 'flex';
   badge.innerHTML = `<span style="color:${srcColor};font-weight:600">${srcLabel}</span> → <span style="font-size:14px">${cat.i}</span> <span style="color:var(--t2);font-weight:500">${cat.n}</span>`;
   $('ec').value = catIdx;
@@ -746,53 +712,6 @@ function autoCat(val) {
       badge.innerHTML = '<span style="color:var(--t4)">Catégorie non détectée — sélection manuelle</span>';
     }
   }, 600);
-}
-
-// ─── Détection magasin/vendeur depuis le libellé ───
-// Si l'utilisateur tape un nom de magasin connu dans Libellé,
-// on lui suggère de le déplacer vers le champ Vendeur (qui est plus approprié).
-
-function isKnownVendor(text) {
-  // Cherche si le texte saisi correspond à un magasin connu (clé de DICT_PERSO ou DICT_PRO)
-  const t = text.trim().toLowerCase();
-  if (t.length < 3) return false;
-  const allKeys = [...new Set([...Object.keys(DICT_PERSO), ...Object.keys(DICT_PRO)])];
-  // Match exact ou si le texte est une clé multi-mots du dico
-  return allKeys.some(k => k.toLowerCase() === t);
-}
-
-function onExpLabelInput(val) {
-  // 1. Auto-catégorisation comme avant
-  autoCat(val);
-  
-  // 2. Suggestion de vendeur SI le libellé saisi est un magasin connu ET le champ Vendeur est vide
-  const trimmed = val.trim();
-  const vendorField = $('ev');
-  const suggestEl = $('vendor-suggest');
-  if (!suggestEl) return;
-  
-  if (vendorField && vendorField.value.trim() === '' && isKnownVendor(trimmed)) {
-    // Capitalize properly
-    const capitalized = trimmed.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-    suggestEl.innerHTML = `💡 <strong>${capitalized}</strong> est un magasin. <button onclick="acceptVendorSuggestion('${capitalized.replace(/'/g, "\\'")}')" style="margin-left:6px;background:var(--blue);color:#fff;border:none;padding:4px 10px;border-radius:6px;font-size:11px;cursor:pointer">Déplacer vers Vendeur</button>`;
-    suggestEl.style.display = 'block';
-  } else {
-    suggestEl.style.display = 'none';
-  }
-}
-
-function acceptVendorSuggestion(vendor) {
-  const labelField = $('el');
-  const vendorField = $('ev');
-  const suggestEl = $('vendor-suggest');
-  if (vendorField) vendorField.value = vendor;
-  if (labelField) labelField.value = '';
-  if (suggestEl) suggestEl.style.display = 'none';
-  // Refocus sur le libellé pour saisir le vrai produit/raison
-  if (labelField) {
-    labelField.placeholder = 'Libellé (ex: Courses, Essence, Restaurant...)';
-    labelField.focus();
-  }
 }
 
 // ─── BONS D'ACHAT & FACTURES — Helpers ───
@@ -876,69 +795,6 @@ function generateInvoicePDF(pages, filename) {
   pdf.save(filename || 'facture.pdf');
 }
 
-// ─── DICTIONNAIRE UTILISATEUR (apprentissage automatique) ───
-// Mémorise les enseignes/vendeurs saisis par l'utilisateur pour enrichir
-// l'auto-catégorisation et la reconnaissance vocale au fil de l'usage.
-//
-// Structure : S.userDict = { "cgosh": { count: 3, cat: 6, lastSeen: 1735... }, ... }
-// - count : nombre de fois saisi
-// - cat : catégorie la plus fréquente (vote majoritaire)
-// - lastSeen : timestamp de dernière utilisation
-
-function learnVendor(vendor, catIdx) {
-  if (!vendor || vendor.length < 3) return;
-  if (!S.userDict) S.userDict = {};
-  const key = vendor.trim().toLowerCase();
-  // Ne pas apprendre les vendeurs déjà connus du dictionnaire intégré
-  // (sinon on pollue avec des doublons)
-  const dict = S.mode === 'pro' ? DICT_PRO : DICT_PERSO;
-  if (dict[key] !== undefined) return;
-  if (DICT_PERSO[key] !== undefined || DICT_PRO[key] !== undefined) return;
-  
-  if (!S.userDict[key]) {
-    S.userDict[key] = {
-      original: vendor.trim(),  // garde la casse originale (ex: "Cgosh")
-      count: 1,
-      cat: catIdx,
-      lastSeen: Date.now()
-    };
-  } else {
-    S.userDict[key].count++;
-    S.userDict[key].lastSeen = Date.now();
-    // Mise à jour de la catégorie si elle change (vote majoritaire simple)
-    // Si saisi 2+ fois avec la même nouvelle catégorie, on met à jour
-    if (catIdx !== undefined && catIdx !== null && S.userDict[key].cat !== catIdx) {
-      // On garde la catégorie la plus récente (l'utilisateur affine son choix)
-      S.userDict[key].cat = catIdx;
-    }
-  }
-}
-
-// Récupère la catégorie apprise pour un vendeur, ou null si inconnu
-function getUserDictCat(vendor) {
-  if (!vendor || !S.userDict) return null;
-  const key = vendor.trim().toLowerCase();
-  return S.userDict[key] ? S.userDict[key].cat : null;
-}
-
-// Renvoie le nom original (casse correcte) si déjà appris, sinon null
-function getUserDictOriginal(vendor) {
-  if (!vendor || !S.userDict) return null;
-  const key = vendor.trim().toLowerCase();
-  return S.userDict[key] ? S.userDict[key].original : null;
-}
-
-// Liste tous les vendeurs appris, triés par fréquence + récence
-function getUserDictKeys() {
-  if (!S.userDict) return [];
-  return Object.keys(S.userDict).sort((a, b) => {
-    const da = S.userDict[a], db = S.userDict[b];
-    // Trier par count desc, puis par lastSeen desc
-    if (db.count !== da.count) return db.count - da.count;
-    return db.lastSeen - da.lastSeen;
-  });
-}
-
 // ─── BONS D'ACHAT — Logique ───
 
 let currentVoucherType = 'bon';      // 'bon' | 'carte' | 'coupon'
@@ -1015,7 +871,7 @@ function addVoucher() {
   const obtained = $('v-obtained').value || new Date().toISOString().slice(0, 10);
   const code = $('v-code').value.trim();
   const notes = $('v-notes').value.trim();
-  const newVoucher = {
+  S.vouchers.push({
     id: gid(),
     type: currentVoucherType,
     label, store, amount, pct, code,
@@ -1023,14 +879,7 @@ function addVoucher() {
     photo: currentVoucherPhoto,
     notes,
     mode: S.mode
-  };
-  S.vouchers.push(newVoucher);
-  debugLog('ADD-VOUCHER', `${label} (${store||'-'}) → S.vouchers count=${S.vouchers.length}`);
-  // Apprend automatiquement le magasin/enseigne saisi
-  if (store) {
-    const catGuess = localCat(store);
-    learnVendor(store, catGuess ? catGuess.idx : 7);
-  }
+  });
   // Reset
   ['v-label','v-store','v-amount','v-pct','v-code','v-notes','v-obtained','v-expires'].forEach(id => {
     const el = $(id); if (el) el.value = '';
@@ -1038,8 +887,7 @@ function addVoucher() {
   removeVoucherPhoto();
   setVoucherType('bon');
   cm('m-voucher');
-  const saved = sv();
-  debugLog('ADD-VOUCHER', `sv() returned ${saved}, verify=${(JSON.parse(localStorage.getItem(SK)||'{}').vouchers||[]).length}`);
+  sv();
   R();
   showToast('✅ Bon enregistré');
 }
@@ -1096,61 +944,6 @@ function removeInvoicePage(idx) {
   renderInvoicePhotoPreviews();
 }
 
-// ─── Joindre une facture depuis le modal Dépense (option D) ───
-let currentExpInvoicePages = []; // pages de la facture jointe à la dépense en cours
-
-function toggleExpInvoice() {
-  const body = $('exp-inv-body');
-  const chev = $('exp-inv-chev');
-  if (!body || !chev) return;
-  const isOpen = body.style.display === 'block';
-  body.style.display = isOpen ? 'none' : 'block';
-  chev.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(90deg)';
-}
-
-async function handleExpInvoicePhoto(input) {
-  if (!input.files || !input.files[0]) return;
-  try {
-    showToast('Compression photo en cours...');
-    const compressed = await compressImage(input.files[0]);
-    currentExpInvoicePages.push(compressed);
-    renderExpInvoicePreviews();
-    input.value = '';
-  } catch (e) {
-    showToast('❌ Erreur de chargement');
-    console.error(e);
-  }
-}
-
-function renderExpInvoicePreviews() {
-  const preview = $('exp-inv-preview');
-  if (!preview) return;
-  preview.innerHTML = currentExpInvoicePages.map((p, idx) => `
-    <div style="position:relative;display:inline-block">
-      <img src="${p}" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid rgba(255,255,255,0.12)">
-      <div style="position:absolute;top:2px;left:2px;background:rgba(0,0,0,0.6);color:#fff;font-size:9px;padding:1px 4px;border-radius:3px">P${idx+1}</div>
-      <button onclick="removeExpInvoicePage(${idx})" style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;width:18px;height:18px;border-radius:50%;cursor:pointer;font-size:9px">✕</button>
-    </div>
-  `).join('');
-}
-
-function removeExpInvoicePage(idx) {
-  currentExpInvoicePages.splice(idx, 1);
-  renderExpInvoicePreviews();
-}
-
-// Reset de l'état facture-jointe (appelé depuis om('m-exp'))
-function resetExpInvoice() {
-  currentExpInvoicePages = [];
-  renderExpInvoicePreviews();
-  const body = $('exp-inv-body');
-  const chev = $('exp-inv-chev');
-  if (body) body.style.display = 'none';
-  if (chev) chev.style.transform = 'rotate(0deg)';
-  const input = $('exp-inv-input');
-  if (input) input.value = '';
-}
-
 function addInvoice() {
   const label = $('i-label').value.trim();
   const vendor = $('i-vendor').value.trim();
@@ -1172,8 +965,6 @@ function addInvoice() {
     pages: [...currentInvoicePages],
     mode: S.mode
   });
-  // Apprend automatiquement le vendeur saisi
-  if (vendor) learnVendor(vendor, cat);
   // Reset
   ['i-label','i-vendor','i-amount','i-date','i-notes'].forEach(id => {
     const el = $(id); if (el) el.value = '';
@@ -1186,17 +977,7 @@ function addInvoice() {
 }
 
 function deleteInvoice(id) {
-  const inv = S.invoices.find(i => i.id === id);
-  const isLinked = inv && inv.linkedTxId;
-  const msg = isLinked 
-    ? 'Supprimer cette facture ? La dépense liée sera conservée mais ne sera plus liée.' 
-    : 'Supprimer cette facture et toutes ses photos ?';
-  showConfirm(msg, () => {
-    // Délier la transaction si elle existe
-    if (isLinked) {
-      const tx = S.tx.find(t => t.id === inv.linkedTxId);
-      if (tx) delete tx.invoiceId;
-    }
+  showConfirm('Supprimer cette facture et toutes ses photos ?', () => {
     S.invoices = S.invoices.filter(i => i.id !== id);
     sv(); R();
     showToast('🗑️ Facture supprimée');
@@ -1213,7 +994,6 @@ function viewInvoice(id) {
   body.innerHTML = `
     <div style="padding:14px">
       <div style="background:rgba(255,255,255,0.04);padding:12px;border-radius:8px;margin-bottom:12px">
-        ${inv.linkedTxId ? `<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--blue);margin-bottom:8px;padding:6px 10px;background:rgba(17,138,178,0.12);border-radius:6px"><span>🔗</span><span>Liée à une dépense</span></div>` : ''}
         <div style="display:flex;justify-content:space-between;margin-bottom:6px">
           <span style="color:var(--t4);font-size:12px">Vendeur</span>
           <span style="font-weight:600">${inv.vendor || '—'}</span>
@@ -1393,7 +1173,7 @@ function startVoice() {
     micBtn.style.background = 'rgba(239,71,111,0.3)';
     micBtn.style.borderColor = 'var(--red)';
     micBtn.style.animation = 'pulse 1s infinite';
-    showVoiceStatus("🎙️ Parlez maintenant... (ex: «Carrefour Dillon courses 87 euros»)", true);
+    showVoiceStatus("🎙️ Parlez maintenant... (ex: «Carrefour quatre-vingt-sept euros»)", true);
   };
   
   recognition.onresult = (event) => {
@@ -1558,36 +1338,6 @@ function parseVoiceInput(text) {
   }
   
   // ─── Apply results ───
-  // Si parseInvoiceVoice est disponible (séparation vendeur/label intelligente), on l'utilise
-  // pour remplir aussi le champ Vendeur (option D — fusion dépense + facture)
-  if (typeof parseInvoiceVoice === 'function') {
-    const smart = parseInvoiceVoice(text);
-    if (smart.vendor && $('ev')) {
-      $('ev').value = smart.vendor;
-      // Le label devient le "vrai" produit/raison (différent du vendeur)
-      if (smart.label && smart.label.toLowerCase() !== smart.vendor.toLowerCase()) {
-        $('el').value = smart.label;
-        autoCat(smart.label);
-      } else {
-        // Si label = vendeur (ex: "Carrefour 50€"), on laisse le libellé vide
-        $('el').value = '';
-      }
-      if (smart.amount && !isNaN(smart.amount) && smart.amount > 0) {
-        $('ea').value = Math.round(smart.amount * 100) / 100;
-      }
-      const parts = [];
-      if (smart.vendor) parts.push(`📍 ${smart.vendor}`);
-      if (smart.label && smart.label.toLowerCase() !== smart.vendor.toLowerCase()) parts.push(`"${smart.label}"`);
-      if (smart.amount) parts.push(fmt(smart.amount));
-      showVoiceStatus(`✅ Compris : ${parts.join(' — ') || original}`, false);
-      if (recognition) { try { recognition.stop(); } catch(e) {} }
-      isListening = false;
-      resetMicBtn();
-      return;
-    }
-  }
-  
-  // Fallback : ancien comportement (label + montant uniquement)
   if (label) {
     $('el').value = label;
     autoCat(label);
@@ -1770,182 +1520,6 @@ function parseVoiceGeneric(text) {
   return { label, amount };
 }
 
-// ─── Parse vocal spécifique aux factures (vendeur + label + montant) ───
-// Détecte le magasin/vendeur en cherchant dans le dictionnaire DICT_PERSO
-// "But Lamentin micro-ondes 189 euros" → vendor="But Lamentin", label="Micro-ondes", amount=189
-// "Carrefour Dillon courses 87 euros 50" → vendor="Carrefour Dillon", label="Courses", amount=87.50
-function parseInvoiceVoice(text) {
-  const original = fixVoiceText(text.trim());
-  let processed = original.toLowerCase();
-  let amount = null;
-  let vendor = '';
-  
-  // 1. Extraction du montant (même logique que parseVoiceGeneric)
-  const euroCentMatch = processed.match(/(\d+[\s,.]?\d*)\s*euros?\s+(\d{1,2})\s*(centimes?|cents?)?/i);
-  if (euroCentMatch) {
-    amount = parseFloat(euroCentMatch[1].replace(/[\s,]/g, '.')) + parseFloat(euroCentMatch[2]) / 100;
-    processed = processed.replace(euroCentMatch[0], '');
-  }
-  if (!amount) {
-    const euroMatch = processed.match(/(\d+[\s,.]?\d*)\s*€|(\d+[\s,.]?\d*)\s*euros?/i);
-    if (euroMatch) {
-      const numStr = (euroMatch[1] || euroMatch[2]).replace(/[\s]/g, '').replace(',', '.');
-      amount = parseFloat(numStr);
-      processed = processed.replace(euroMatch[0], '');
-    }
-  }
-  
-  // 2. Détection du magasin/vendeur via le dictionnaire
-  // On combine DICT_PERSO + DICT_PRO et on trie par longueur décroissante
-  // pour matcher "Carrefour Dillon" avant "Carrefour"
-  const allKeys = [...new Set([...Object.keys(DICT_PERSO), ...Object.keys(DICT_PRO)])];
-  const sortedKeys = allKeys.sort((a, b) => b.length - a.length);
-  
-  // Suffixes de localisation Martinique (à inclure dans le vendeur si présents juste après)
-  const locations = [
-    'dillon', 'galleria', 'la galleria', 'terca', 'génipa', 'genipa', 'robert', 'le robert',
-    'lamentin', 'le lamentin', 'ducos', 'schoelcher', 'fort-de-france', 'fort de france',
-    'trinité', 'le marin', 'marin', 'capesterre', 'montjoly', 'cluny', 'place d\'armes',
-    'bô kanal', 'bo kanal', 'contact', 'market', 'express'
-  ];
-  
-  for (const key of sortedKeys) {
-    const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const re = new RegExp('\\b' + escapedKey + '\\b', 'i');
-    const m = processed.match(re);
-    if (m) {
-      vendor = m[0];
-      // Position dans le texte pour vérifier s'il y a une localisation après
-      const afterIdx = m.index + m[0].length;
-      const after = processed.substring(afterIdx).trim();
-      // Vérifier si le mot juste après est une localisation
-      for (const loc of locations) {
-        const escapedLoc = loc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const locRe = new RegExp('^\\s*' + escapedLoc + '\\b', 'i');
-        const locM = after.match(locRe);
-        if (locM) {
-          vendor += ' ' + locM[0].trim();
-          // Retirer la localisation du processed pour qu'elle ne soit pas dans le label
-          processed = processed.substring(0, m.index) + ' ' + after.substring(locM[0].length);
-          break;
-        }
-      }
-      // Retirer le vendeur du label
-      processed = processed.replace(re, ' ');
-      break;
-    }
-  }
-  
-  // 3. Le reste = label
-  let label = processed.replace(/\s+/g, ' ').replace(/^\s*(pour|chez|à|au|aux|en|de|du|des|le|la|les|un|une|euros?)\s+/i, '').trim();
-  // Nettoyer les mots de transition restants
-  label = label.replace(/\b(pour|chez|à|au|aux|en|de|du|des)\b/gi, ' ').replace(/\s+/g, ' ').trim();
-  
-  // Capitaliser proprement
-  if (vendor.length > 0) {
-    vendor = vendor.split(/\s+/).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-  }
-  if (label.length > 0) {
-    label = label.charAt(0).toUpperCase() + label.slice(1);
-  }
-  
-  // Si pas de vendeur trouvé mais label rempli, on laisse le vendeur vide (l'utilisateur peut ajuster)
-  // Si pas de label mais vendeur trouvé, recopier le vendeur dans le label
-  if (!label && vendor) {
-    label = vendor;
-  }
-  
-  return { vendor, label, amount };
-}
-
-// Démarre la dictée vocale spécifique au modal Facture (3 champs)
-function startVoiceForInvoice() {
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) {
-    showToast('❌ Dictée vocale non supportée','var(--red)');
-    return;
-  }
-  const labelField = $('i-label');
-  const micBtn = labelField.parentElement.querySelector('.mic-btn-ui');
-  const statusEl = document.querySelector('.voice-status-generic[data-for="i-label"]');
-  
-  if (isListening && recognition) {
-    recognition.stop();
-    return;
-  }
-  
-  recognition = new SR();
-  recognition.lang = 'fr-FR';
-  recognition.continuous = false;
-  recognition.interimResults = true;
-  recognition.maxAlternatives = 1;
-  
-  recognition.onstart = () => {
-    isListening = true;
-    if(micBtn) micBtn.classList.add('listening');
-    if(statusEl){statusEl.style.display='block';statusEl.textContent='🎙️ PARLEZ MAINTENANT... (ex: «Carrefour Dillon courses 87 euros»)';statusEl.classList.add('listening-active');}
-  };
-  
-  recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    const isFinal = event.results[0].isFinal;
-    
-    if (isFinal) {
-      const parsed = parseInvoiceVoice(transcript);
-      if(parsed.vendor) $('i-vendor').value = parsed.vendor;
-      if(parsed.label) $('i-label').value = parsed.label;
-      if(parsed.amount) $('i-amount').value = Math.round(parsed.amount * 100) / 100;
-      
-      // Auto-catégorisation basée sur le vendeur/label
-      const sel = $('i-cat');
-      if (sel && (parsed.vendor || parsed.label)) {
-        const searchText = (parsed.vendor + ' ' + parsed.label).toLowerCase();
-        const dict = S.mode === 'pro' ? DICT_PRO : DICT_PERSO;
-        const sortedKeys = Object.keys(dict).sort((a, b) => b.length - a.length);
-        for (const key of sortedKeys) {
-          if (searchText.includes(key.toLowerCase())) {
-            sel.value = dict[key];
-            break;
-          }
-        }
-      }
-      
-      const parts = [];
-      if(parsed.vendor) parts.push(`📍 ${parsed.vendor}`);
-      if(parsed.label) parts.push(`"${parsed.label}"`);
-      if(parsed.amount) parts.push(fmt(parsed.amount));
-      if(statusEl){statusEl.textContent=`✅ ${parts.join(' — ') || transcript}`;statusEl.classList.remove('listening-active');}
-      
-      try { recognition.stop(); } catch(e) {}
-      isListening = false;
-      if(micBtn) micBtn.classList.remove('listening');
-    } else {
-      if(statusEl){statusEl.style.display='block';statusEl.textContent=`🎙️ "${transcript}"...`;}
-    }
-  };
-  
-  recognition.onerror = (event) => {
-    isListening = false;
-    if(micBtn) micBtn.classList.remove('listening');
-    if(event.error === 'no-speech'){
-      if(statusEl){statusEl.textContent='🔇 Aucune voix détectée';}
-    } else if(event.error === 'not-allowed'){
-      if(statusEl){statusEl.textContent='🚫 Accès micro refusé';}
-    } else {
-      if(statusEl){statusEl.textContent=`❌ Erreur: ${event.error}`;}
-    }
-  };
-  
-  recognition.onend = () => {
-    isListening = false;
-    if(micBtn) micBtn.classList.remove('listening');
-    try { recognition.abort(); } catch(e) {}
-    recognition = null;
-  };
-  
-  recognition.start();
-}
-
 // ─── Voice search ───
 function voiceSearch(){
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1992,199 +1566,19 @@ function voiceSearch(){
   recognition.start();
 }
 
-function ds(){const n=new Date();return{mode:"perso",yr:n.getFullYear(),mo:n.getMonth(),tab:"budget",tx:[],inc:[],bgt:{},hab:[],hl:{},rec:[],inst:[],vouchers:[],invoices:[],userDict:{}};}
+function ds(){const n=new Date();return{mode:"perso",yr:n.getFullYear(),mo:n.getMonth(),tab:"budget",tx:[],inc:[],bgt:{},hab:[],hl:{},rec:[],inst:[],vouchers:[],invoices:[]};}
 function ld(){try{const s=localStorage.getItem(SK);return s?JSON.parse(s):null}catch(e){return null}}
-function sv(){try{localStorage.setItem(SK,JSON.stringify(S));return true;}catch(e){console.error('sv error:',e);return false;}}
-
-// ─── Debug logger persistant (stocké séparément du state principal) ───
-function debugLog(action, msg) {
-  try {
-    const k = 'scribflow_debuglog';
-    const now = new Date().toISOString().slice(11, 19);
-    let log = [];
-    try { log = JSON.parse(localStorage.getItem(k) || '[]'); } catch(_) {}
-    log.push(`${now} [${action}] ${msg}`);
-    if (log.length > 50) log = log.slice(-50);
-    localStorage.setItem(k, JSON.stringify(log));
-  } catch(_) {}
-}
-
-function getDebugLog() {
-  try {
-    return JSON.parse(localStorage.getItem('scribflow_debuglog') || '[]');
-  } catch(_) {
-    return [];
-  }
-}
-
-function clearDebugLog() {
-  try { localStorage.removeItem('scribflow_debuglog'); } catch(_) {}
-}
-
-// Fonction de diagnostic du stockage (accessible via console et UI)
-function getStorageStats() {
-  try {
-    const json = JSON.stringify(S);
-    const sizeBytes = json.length;
-    const sizeKB = Math.round(sizeBytes / 1024);
-    const sizeMB = (sizeBytes / 1024 / 1024).toFixed(2);
-    
-    // Compter taille des photos (sources principales du poids)
-    let photosSize = 0;
-    let photosCount = 0;
-    (S.invoices || []).forEach(inv => {
-      (inv.pages || []).forEach(p => { if(p) { photosSize += p.length; photosCount++; } });
-    });
-    (S.vouchers || []).forEach(v => {
-      if (v.photo) { photosSize += v.photo.length; photosCount++; }
-    });
-    const photosKB = Math.round(photosSize / 1024);
-    
-    // Vérifier que ce qui est en localStorage est bien synchronisé
-    const stored = localStorage.getItem(SK);
-    const storedKB = stored ? Math.round(stored.length / 1024) : 0;
-    const inSync = stored && stored.length === json.length;
-    
-    return {
-      totalKB: sizeKB,
-      totalMB: sizeMB,
-      photosKB: photosKB,
-      photosCount: photosCount,
-      photosPercent: sizeBytes > 0 ? Math.round(100 * photosSize / sizeBytes) : 0,
-      storedKB: storedKB,
-      inSync: inSync,
-      transactions: (S.tx || []).length + (S.inc || []).length,
-      invoices: (S.invoices || []).length,
-      vouchers: (S.vouchers || []).length,
-      limit: 5120, // 5 Mo en Ko
-      percentUsed: Math.round(100 * sizeKB / 5120)
-    };
-  } catch(e) {
-    return { error: e.message };
-  }
-}
-
-// Affiche un diagnostic complet du stockage (taille, photos, sync)
-function showStorageDiag() {
-  const stats = getStorageStats();
-  if (stats.error) {
-    showToast('❌ Erreur : '+stats.error, 'var(--red)');
-    return;
-  }
-  
-  // Vérifier si la sauvegarde marche réellement (test d'écriture)
-  let writeOK = false;
-  let writeError = '';
-  try {
-    const testKey = '__test_write_' + Date.now();
-    localStorage.setItem(testKey, 'test');
-    const readBack = localStorage.getItem(testKey);
-    localStorage.removeItem(testKey);
-    writeOK = (readBack === 'test');
-  } catch(e) {
-    writeError = e.name + ': ' + e.message;
-  }
-  
-  // Vérifier compatibilité PWA standalone
-  const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
-                window.navigator.standalone === true;
-  const isIOSSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-  
-  const usagePct = stats.percentUsed;
-  const usageColor = usagePct < 50 ? 'var(--green)' : usagePct < 80 ? 'var(--yellow)' : 'var(--red)';
-  
-  const msg = `
-    <div style="font-size:13px;line-height:1.6">
-      <div style="font-weight:700;font-size:15px;margin-bottom:10px;color:var(--t1)">🔧 État du stockage</div>
-      
-      <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-bottom:10px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-          <span style="color:var(--t4)">Espace utilisé</span>
-          <span style="color:${usageColor};font-weight:700">${stats.totalKB} Ko / ~5120 Ko (${usagePct}%)</span>
-        </div>
-        <div style="height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;margin-top:6px">
-          <div style="width:${Math.min(usagePct,100)}%;height:100%;background:${usageColor};transition:width .3s"></div>
-        </div>
-        <div style="font-size:11px;color:var(--t4);margin-top:6px">⚠️ iOS Safari limite à ~5 Mo</div>
-      </div>
-      
-      <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-bottom:10px">
-        <div style="font-weight:600;margin-bottom:6px">📊 Détail des données</div>
-        <div style="display:flex;justify-content:space-between"><span>Transactions</span><span>${stats.transactions}</span></div>
-        <div style="display:flex;justify-content:space-between"><span>Bons d'achat</span><span>${stats.vouchers}</span></div>
-        <div style="display:flex;justify-content:space-between"><span>Factures</span><span>${stats.invoices}</span></div>
-        <div style="display:flex;justify-content:space-between"><span>📷 Photos</span><span>${stats.photosCount} (${stats.photosKB} Ko, ${stats.photosPercent}%)</span></div>
-      </div>
-      
-      <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-bottom:10px">
-        <div style="font-weight:600;margin-bottom:6px">🔍 Diagnostic technique</div>
-        <div style="display:flex;justify-content:space-between"><span>Test d'écriture</span><span style="color:${writeOK?'var(--green)':'var(--red)'}">${writeOK?'✅ OK':'❌ ÉCHEC'}</span></div>
-        <div style="display:flex;justify-content:space-between"><span>Données synchronisées</span><span style="color:${stats.inSync?'var(--green)':'var(--red)'}">${stats.inSync?'✅ OK':'❌ Désync'}</span></div>
-        <div style="display:flex;justify-content:space-between"><span>Mode PWA</span><span>${isPWA?'✅ Standalone':'🌐 Navigateur'}</span></div>
-        <div style="display:flex;justify-content:space-between"><span>Plateforme</span><span>${isIOSSafari?'🍎 iOS Safari':'Autre'}</span></div>
-        ${writeError ? `<div style="color:var(--red);font-size:11px;margin-top:6px">${writeError}</div>` : ''}
-      </div>
-      
-      ${stats.photosPercent > 50 ? `
-      <div style="background:rgba(255,209,102,0.12);border:1px solid rgba(255,209,102,0.3);padding:10px;border-radius:8px;margin-bottom:10px;font-size:12px">
-        💡 <strong>Astuce :</strong> Les photos occupent ${stats.photosPercent}% du stockage. Supprime les anciennes factures/bons pour libérer de la place.
-      </div>` : ''}
-      
-      ${usagePct > 80 ? `
-      <div style="background:rgba(239,71,111,0.12);border:1px solid var(--red);padding:10px;border-radius:8px;font-size:12px;color:var(--red)">
-        🚨 <strong>STOCKAGE BIENTÔT PLEIN !</strong> Sauvegarde ton backup JSON et supprime des données.
-      </div>` : ''}
-      
-      <div style="background:rgba(255,255,255,0.05);padding:10px;border-radius:8px;margin-top:10px">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-          <div style="font-weight:600">📜 Journal d'activité (50 dernières)</div>
-          <button onclick="clearDebugLog();showStorageDiag();" style="background:rgba(255,255,255,0.1);border:none;color:var(--t2);font-size:10px;padding:4px 8px;border-radius:5px;cursor:pointer">Vider</button>
-        </div>
-        <div style="font-family:monospace;font-size:10px;line-height:1.5;color:var(--t2);max-height:200px;overflow-y:auto;background:rgba(0,0,0,0.3);padding:8px;border-radius:4px">
-          ${getDebugLog().length === 0 ? '<em style="color:var(--t4)">Aucune activité enregistrée</em>' : getDebugLog().map(l => {
-            const color = l.includes('SV-ERR') || l.includes('LD-ERR') ? 'var(--red)' : 
-                          l.includes('SV') ? 'var(--green)' :
-                          l.includes('LD') ? 'var(--blue)' : 'var(--t2)';
-            return `<div style="color:${color}">${l}</div>`;
-          }).reverse().join('')}
-        </div>
-        <div style="font-size:10px;color:var(--t4);margin-top:6px">💡 Affiche-moi ce log si tu rencontres un bug</div>
-      </div>
-    </div>
-  `;
-  
-  showInfoModal('🔧 État du stockage', msg);
-}
-
-// Modal d'information générique
-function showInfoModal(title, htmlContent) {
-  // Crée un modal temporaire
-  let modal = document.getElementById('m-info-tmp');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'm-info-tmp';
-    modal.className = 'mo';
-    modal.innerHTML = `<div class="md" style="max-width:440px"><div class="mh"><span class="mt" id="info-tmp-title"></span><button class="mc" onclick="cm('m-info-tmp')">✕</button></div><div class="mf" id="info-tmp-body" style="max-height:75vh;overflow-y:auto"></div></div>`;
-    document.body.appendChild(modal);
-    modal.addEventListener('click', e => { if(e.target===modal) modal.classList.remove('open'); });
-  }
-  document.getElementById('info-tmp-title').textContent = title;
-  document.getElementById('info-tmp-body').innerHTML = htmlContent;
-  modal.classList.add('open');
-}
-
+function sv(){localStorage.setItem(SK,JSON.stringify(S))}
 function gid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
 function fmt(v){return new Intl.NumberFormat("fr-FR",{style:"currency",currency:"EUR"}).format(v)}
 function dim(y,m){return new Date(y,m+1,0).getDate()}
 
 S=ld()||ds();
-debugLog('INIT', `App started. Storage size=${(localStorage.getItem(SK)||'').length} chars. State has ${(S.vouchers||[]).length} bons, ${(S.tx||[]).length} tx, ${(S.inc||[]).length} inc, ${(S.invoices||[]).length} factures`);
 // Migrate old data
 if(!S.rec) S.rec=[];
 if(!S.inst) S.inst=[];
 if(!S.vouchers) S.vouchers=[];
 if(!S.invoices) S.invoices=[];
-if(!S.userDict) S.userDict={};
 if(S._priv===undefined) S._priv=true;
 if(!S.theme) S.theme='dark';
 if(!S.goals) S.goals=[];
@@ -2345,26 +1739,16 @@ function getAlertsHTML() {
   const expiring = getExpiringVouchers(30);
   const expired = getExpiredVouchers();
   if (expiring.length === 0 && expired.length === 0) return '';
-  // Détecte si urgence critique (expirés ou ≤7 jours)
-  const hasUrgent = expired.length > 0 || expiring.some(v => daysUntil(v.expires) <= 7);
-  const cardStyle = hasUrgent
-    ? 'border:2px solid var(--red);background:rgba(239,71,111,0.12);box-shadow:0 0 0 4px rgba(239,71,111,0.08);animation:alertPulse 2s ease-in-out infinite'
-    : 'border:1px solid rgba(255,209,102,0.4);background:rgba(255,209,102,0.06)';
-  const titleEmoji = hasUrgent ? '🚨' : '⚠️';
-  const titleColor = hasUrgent ? 'var(--red)' : 'var(--yellow)';
-  return `<div class="card fi fd1" style="${cardStyle}">
-    <div class="ctitle" style="color:${titleColor};display:flex;align-items:center;gap:8px">
-      <span>${titleEmoji}</span>
-      <span>Alertes${hasUrgent ? ' urgentes' : ''} — ${expiring.length + expired.length}</span>
-    </div>
+  return `<div class="card fi fd1" style="border:1px solid rgba(239,71,111,0.3);background:rgba(239,71,111,0.06)">
+    <div class="ctitle" style="color:var(--red)">🚨 Alertes — ${expiring.length + expired.length}</div>
     ${expired.length > 0 ? `
       <div style="margin-top:8px;font-size:12px;color:var(--t2);margin-bottom:6px">⏰ Expiré${expired.length>1?'s':''} (${expired.length})</div>
       ${expired.map(v => `
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(239,71,111,0.15);border-radius:8px;margin-bottom:4px;border-left:3px solid var(--red)">
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(239,71,111,0.1);border-radius:8px;margin-bottom:4px">
           <span style="font-size:14px">${v.type==='bon'?'🎟️':v.type==='carte'?'💳':'🏷️'}</span>
           <div style="flex:1">
             <div style="font-size:12px;font-weight:500;color:var(--t1)">${v.label}</div>
-            <div style="font-size:10px;color:var(--red);font-weight:600">Expiré le ${v.expires}</div>
+            <div style="font-size:10px;color:var(--red)">Expiré le ${v.expires}</div>
           </div>
           <button class="bgh" style="font-size:10px;padding:4px 8px" onclick="toggleVoucherUsed('${v.id}')">Marquer utilisé</button>
         </div>
@@ -2375,14 +1759,13 @@ function getAlertsHTML() {
       ${expiring.map(v => {
         const d = daysUntil(v.expires);
         const urgency = d <= 7 ? 'var(--red)' : d <= 15 ? 'var(--yellow)' : 'var(--blue)';
-        const isVeryUrgent = d <= 7;
-        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:${isVeryUrgent?'rgba(239,71,111,0.1)':'rgba(255,255,255,0.04)'};border-radius:8px;margin-bottom:4px;${isVeryUrgent?'border-left:3px solid var(--red)':''}">
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:4px">
           <span style="font-size:14px">${v.type==='bon'?'🎟️':v.type==='carte'?'💳':'🏷️'}</span>
           <div style="flex:1">
-            <div style="font-size:12px;font-weight:${isVeryUrgent?'700':'500'};color:var(--t1)">${v.label}</div>
+            <div style="font-size:12px;font-weight:500;color:var(--t1)">${v.label}</div>
             <div style="font-size:10px;color:var(--t4)">${v.store || '—'} · ${v.amount ? fmt(v.amount) : (v.pct ? v.pct+'%' : '')}</div>
           </div>
-          <span style="font-size:10px;padding:3px 8px;border-radius:6px;background:${urgency}33;color:${urgency};font-weight:700">${d===0?'Auj. !':d===1?'Demain !':d+' j'}</span>
+          <span style="font-size:10px;padding:3px 8px;border-radius:6px;background:${urgency}22;color:${urgency};font-weight:600">${d===0?'Auj.':d===1?'Demain':d+' j'}</span>
         </div>`;
       }).join('')}
     ` : ''}
@@ -2503,12 +1886,9 @@ function om(id){
   // Reset fields when opening financial modals (not when editing)
   if(id==='m-exp' && !editingExpId){
     $('el').value='';$('ea').value='';$('ed').value='';
-    if($('ev')) $('ev').value='';
-    if($('vendor-suggest')) $('vendor-suggest').style.display='none';
     const vs=$('voice-status');if(vs)vs.style.display='none';
     const ab=$('ai-badge');if(ab)ab.style.display='none';
     hideBadge();
-    resetExpInvoice();
   }
   if(id==='m-inc' && !editingIncId){
     $('il').value='';$('ia').value='';$('id2').value='';
@@ -2560,19 +1940,14 @@ let editingIncId = null;
 
 // ─── Toast notification ───
 function showToast(msg, color='var(--green)', duration=3000){
-  try {
-    const t=$('toast');
-    if(!t) { console.log('Toast:', msg); return; }
-    t.style.display='block';
-    t.style.background=color==='var(--green)'?'rgba(6,214,160,0.9)':color==='var(--red)'?'rgba(239,71,111,0.9)':'rgba(17,138,178,0.9)';
-    t.style.color='#fff';
-    t.className='';
-    t.textContent=msg;
-    clearTimeout(t._timer);
-    t._timer=setTimeout(()=>{t.className='hide';setTimeout(()=>{t.style.display='none'},300)},duration);
-  } catch(e) {
-    console.error('showToast error:', e);
-  }
+  const t=$('toast');
+  t.style.display='block';
+  t.style.background=color==='var(--green)'?'rgba(6,214,160,0.9)':color==='var(--red)'?'rgba(239,71,111,0.9)':'rgba(17,138,178,0.9)';
+  t.style.color='#fff';
+  t.className='';
+  t.textContent=msg;
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>{t.className='hide';setTimeout(()=>{t.style.display='none'},300)},duration);
 }
 
 // ─── Collapsible sections ───
@@ -2864,7 +2239,7 @@ function updateSearch(val){
         if(t._type==='inc'){
           return `<div class="txrow txi"><span style="font-size:16px">💵</span><span class="txl">${t.l} ${badge}</span><span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--green)">${S._priv?'+'+fmt(t.a):'••••••'}</span>${t.id&&S._priv?`<button class="bgh" onclick="editInc('${t.id}')">✏️</button><button class="bgh" onclick="rinc('${t.id}')">✕</button>`:''}</div>`;
         } else {
-          return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.v?t.v+' — '+t.l:t.l} ${badge}${t.invoiceId?'<span onclick="viewInvoice(\''+t.invoiceId+'\');event.stopPropagation()" style="cursor:pointer;margin-left:6px;font-size:13px" title="Voir la facture">📎</span>':''}</span><span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--red)">-${fmt(t.a)}</span>${t.id?`<button class="bgh" onclick="editExp('${t.id}')">✏️</button><button class="bgh" onclick="rtx('${t.id}')">✕</button>`:''}</div>`;
+          return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.l} ${badge}</span><span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--red)">-${fmt(t.a)}</span>${t.id?`<button class="bgh" onclick="editExp('${t.id}')">✏️</button><button class="bgh" onclick="rtx('${t.id}')">✕</button>`:''}</div>`;
         }
       }).join('');
       if(sq && fExp.length>0){
@@ -3175,60 +2550,21 @@ function getSmartSummary(){
 }
 
 function addExp(){
-  const l=$('el').value.trim(),v=$('ev')?$('ev').value.trim():'',a=parseFloat($('ea').value),c=parseInt($('ec').value),d=$('ed').value||new Date().toISOString().slice(0,10);
+  const l=$('el').value.trim(),a=parseFloat($('ea').value),c=parseInt($('ec').value),d=$('ed').value||new Date().toISOString().slice(0,10);
   if(!l||!a)return;
-  debugLog('ADD-EXP-START', `label=${l}, vendor=${v}, amount=${a}, cat=${c}, S.tx.length=${S.tx.length}`);
   const isEdit = !!editingExpId;
-  let txId;
   if (editingExpId) {
     const tx = S.tx.find(t=>t.id===editingExpId);
-    if(tx){ tx.l=l; tx.a=a; tx.ci=c; tx.d=d; if(v) tx.v=v; else delete tx.v; txId = tx.id; }
+    if(tx){ tx.l=l; tx.a=a; tx.ci=c; tx.d=d; }
     editingExpId = null;
   } else {
-    const newTx = {id:gid(),l,a,ci:c,d,m:S.mode,ts:Date.now()};
-    if(v) newTx.v = v;
-    txId = newTx.id;
-    S.tx.push(newTx);
-    debugLog('ADD-EXP-PUSH', `S.tx.length now=${S.tx.length}, last=${JSON.stringify(newTx).substring(0,80)}`);
+    S.tx.push({id:gid(),l,a,ci:c,d,m:S.mode,ts:Date.now()});
   }
-  
-  // Si une facture est jointe, la créer et la lier à la transaction
-  let invoiceCreated = false;
-  if (currentExpInvoicePages.length > 0) {
-    const invoiceId = gid();
-    S.invoices.push({
-      id: invoiceId,
-      label: l,
-      vendor: v || l,    // utilise le vendeur si renseigné, sinon le libellé
-      amount: a,
-      date: d,
-      cat: c,
-      notes: '',
-      pages: [...currentExpInvoicePages],
-      mode: S.mode,
-      linkedTxId: txId
-    });
-    const tx = S.tx.find(t => t.id === txId);
-    if (tx) tx.invoiceId = invoiceId;
-    invoiceCreated = true;
-  }
-  
-  // Apprend automatiquement le vendeur saisi (enrichit le dictionnaire utilisateur)
-  if (v) learnVendor(v, c);
-  
   const cat=CATS[S.mode][c];
-  const saveResult = sv();
-  debugLog('ADD-EXP-SAVE', `sv() returned ${saveResult}, verify=${(JSON.parse(localStorage.getItem(SK)||'{}').tx||[]).length} tx in storage`);
-  cm('m-exp');hideBadge();R();
-  $('el').value='';$('ea').value='';$('ed').value='';$('ec').value='0';
-  if($('ev')) $('ev').value='';
-  if($('vendor-suggest')) $('vendor-suggest').style.display='none';
-  resetExpInvoice();
+  sv();cm('m-exp');hideBadge();R();$('el').value='';$('ea').value='';$('ed').value='';$('ec').value='0';
   const vs=$('voice-status');if(vs)vs.style.display='none';
   $('m-exp').querySelector('.mt').textContent='Nouvelle dépense';
-  const displayName = v ? `${v} — ${l}` : l;
-  const toastMsg = isEdit ? `✏️ Dépense modifiée : ${displayName} — ${fmt(a)}` : `✅ Dépense ajoutée : ${displayName} — ${fmt(a)} (${cat?.i} ${cat?.n})${invoiceCreated ? ' 📎' : ''}`;
-  showToast(toastMsg);
+  showToast(isEdit?`✏️ Dépense modifiée : ${l} — ${fmt(a)}`:`✅ Dépense ajoutée : ${l} — ${fmt(a)} (${cat?.i} ${cat?.n})`);
 }
 function addInc(){
   const l=$('il').value.trim(),a=parseFloat($('ia').value),d=$('id2').value||new Date().toISOString().slice(0,10);
@@ -3253,8 +2589,6 @@ function editExp(id){
   $('el').value = tx.l;
   $('ea').value = tx.a;
   $('ed').value = tx.d;
-  if($('ev')) $('ev').value = tx.v || '';
-  if($('vendor-suggest')) $('vendor-suggest').style.display='none';
   om('m-exp');
   // Wait for modal to open then set category
   setTimeout(()=>{ $('ec').value = tx.ci; autoCat(tx.l); }, 50);
@@ -3278,18 +2612,7 @@ function editInc(id){
 function rtx(id){
   const tx=S.tx.find(t=>t.id===id);
   if(!tx) return;
-  const hasInvoice = !!tx.invoiceId;
-  const msg = hasInvoice 
-    ? `Supprimer la dépense "${tx.l}" (${fmt(tx.a)}) et sa facture jointe ?`
-    : `Supprimer la dépense "${tx.l}" (${fmt(tx.a)}) ?`;
-  showConfirm(msg,()=>{
-    if (tx.invoiceId) {
-      S.invoices = S.invoices.filter(i => i.id !== tx.invoiceId);
-    }
-    S.tx=S.tx.filter(t=>t.id!==id);
-    sv();R();
-    showToast('🗑 Dépense supprimée','var(--red)');
-  });
+  showConfirm(`Supprimer la dépense "${tx.l}" (${fmt(tx.a)}) ?`,()=>{S.tx=S.tx.filter(t=>t.id!==id);sv();R();showToast('🗑 Dépense supprimée','var(--red)');});
 }
 function rinc(id){
   const inc=S.inc.find(t=>t.id===id);
@@ -3667,7 +2990,6 @@ function RB(cats){
     <div class="smart-summary fi">
       ${summaryLines.map(l=>`<div style="font-size:13px;color:var(--t2);margin-bottom:6px;line-height:1.5">${l}</div>`).join('')}
     </div>
-    ${getAlertsHTML()}
     <div class="srow fi">
       <div class="scard" onclick="togglePrivacy()" style="cursor:pointer">
         <div style="display:flex;justify-content:space-between;align-items:center"><div class="slbl">Revenus</div><span style="font-size:12px;color:var(--t4)">${S._priv?'👁️':'🔒'}</span></div>
@@ -3697,7 +3019,6 @@ function RB(cats){
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="om('m-invoice')">🧾 Facture</button>
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="exportData()">💾 Sauvegarder</button>
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="triggerImport()">📂 Restaurer</button>
-      <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="showStorageDiag()">🔧 État stockage</button>
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="showExportModal()">📊 Exporter Excel</button>
     </div>
 
@@ -3708,6 +3029,7 @@ function RB(cats){
       </div>`:''}
     </div>
 
+    ${getAlertsHTML()}
     ${getGoalsHTML()}
     ${getVouchersHTML()}
     ${getInvoicesHTML()}
@@ -3799,7 +3121,7 @@ function RB(cats){
             <span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--green)">${S._priv?'+'+fmt(t.a):'••••••'}</span>
             ${t.id&&S._priv?`<button class="bgh" onclick="editInc('${t.id}')" title="Modifier">✏️</button><button class="bgh" onclick="rinc('${t.id}')">✕</button>`:''}</div>`;
           } else {
-            return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.v?t.v+' — '+t.l:t.l} ${badge}${t.invoiceId?'<span onclick="viewInvoice(\''+t.invoiceId+'\');event.stopPropagation()" style="cursor:pointer;margin-left:6px;font-size:13px" title="Voir la facture">📎</span>':''}</span>
+            return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.l} ${badge}</span>
             <span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--red)">-${fmt(t.a)}</span>
             ${t.id?`<button class="bgh" onclick="editExp('${t.id}')" title="Modifier">✏️</button><button class="bgh" onclick="rtx('${t.id}')">✕</button>`:''}</div>`;
           }
