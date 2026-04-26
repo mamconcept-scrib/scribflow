@@ -133,6 +133,7 @@ svg text{font-family:var(--fb)}
 
 @keyframes fu{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,71,111,0.4)}50%{box-shadow:0 0 0 10px rgba(239,71,111,0)}}
+@keyframes alertPulse{0%,100%{box-shadow:0 0 0 4px rgba(239,71,111,0.08)}50%{box-shadow:0 0 0 6px rgba(239,71,111,0.18)}}
 @keyframes toastIn{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
 @keyframes toastOut{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-20px)}}
 .fi{animation:fu .4s ease both}.fd1{animation-delay:.05s}.fd2{animation-delay:.1s}.fd3{animation-delay:.15s}
@@ -647,13 +648,29 @@ function localCat(label) {
   // Also check the full label
   const full = label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[\s]+/g,'');
   
-  // Check user's past transactions for exact match first
+  // 1. Check user's past transactions for exact match first
   const pastMatch = S.tx.filter(t => t.m === S.mode && t.l.toLowerCase() === label.toLowerCase());
   if (pastMatch.length > 0) {
     return { idx: pastMatch[pastMatch.length - 1].ci, source: 'historique' };
   }
   
-  // Dictionary lookup
+  // 2. Check user-learned dictionary (userDict) — apprend des saisies précédentes
+  if (S.userDict) {
+    const userDictCat = getUserDictCat(label);
+    if (userDictCat !== null && userDictCat !== undefined) {
+      return { idx: userDictCat, source: 'appris' };
+    }
+    // Recherche partielle dans le dico utilisateur
+    for (const w of words) {
+      if (w.length < 3) continue;
+      const userCat = getUserDictCat(w);
+      if (userCat !== null && userCat !== undefined) {
+        return { idx: userCat, source: 'appris' };
+      }
+    }
+  }
+  
+  // 3. Dictionary lookup (intégré)
   for (const w of words) {
     if (w.length < 2) continue;
     if (dict[w] !== undefined) return { idx: dict[w], source: 'auto' };
@@ -691,8 +708,8 @@ async function claudeCat(label) {
 function showBadge(catIdx, source) {
   const badge = $('ai-badge');
   const cat = CATS[S.mode][catIdx];
-  const srcLabel = source === 'historique' ? '📋 Historique' : source === 'IA' ? '🤖 IA Claude' : '⚡ Auto';
-  const srcColor = source === 'historique' ? 'var(--purple)' : source === 'IA' ? 'var(--blue)' : 'var(--green)';
+  const srcLabel = source === 'historique' ? '📋 Historique' : source === 'IA' ? '🤖 IA Claude' : source === 'appris' ? '📚 Appris' : '⚡ Auto';
+  const srcColor = source === 'historique' ? 'var(--purple)' : source === 'IA' ? 'var(--blue)' : source === 'appris' ? 'var(--warm)' : 'var(--green)';
   badge.style.display = 'flex';
   badge.innerHTML = `<span style="color:${srcColor};font-weight:600">${srcLabel}</span> → <span style="font-size:14px">${cat.i}</span> <span style="color:var(--t2);font-weight:500">${cat.n}</span>`;
   $('ec').value = catIdx;
@@ -859,6 +876,56 @@ function generateInvoicePDF(pages, filename) {
   pdf.save(filename || 'facture.pdf');
 }
 
+// ─── DICTIONNAIRE UTILISATEUR (apprentissage automatique) ───
+// Mémorise les enseignes/vendeurs saisis par l'utilisateur pour enrichir
+// l'auto-catégorisation et la reconnaissance vocale au fil de l'usage.
+
+function learnVendor(vendor, catIdx) {
+  if (!vendor || vendor.length < 3) return;
+  if (!S.userDict) S.userDict = {};
+  const key = vendor.trim().toLowerCase();
+  // Ne pas apprendre les vendeurs déjà connus du dictionnaire intégré
+  const dict = S.mode === 'pro' ? DICT_PRO : DICT_PERSO;
+  if (dict[key] !== undefined) return;
+  if (DICT_PERSO[key] !== undefined || DICT_PRO[key] !== undefined) return;
+  
+  if (!S.userDict[key]) {
+    S.userDict[key] = {
+      original: vendor.trim(),
+      count: 1,
+      cat: catIdx,
+      lastSeen: Date.now()
+    };
+  } else {
+    S.userDict[key].count++;
+    S.userDict[key].lastSeen = Date.now();
+    if (catIdx !== undefined && catIdx !== null && S.userDict[key].cat !== catIdx) {
+      S.userDict[key].cat = catIdx;
+    }
+  }
+}
+
+function getUserDictCat(vendor) {
+  if (!vendor || !S.userDict) return null;
+  const key = vendor.trim().toLowerCase();
+  return S.userDict[key] ? S.userDict[key].cat : null;
+}
+
+function getUserDictOriginal(vendor) {
+  if (!vendor || !S.userDict) return null;
+  const key = vendor.trim().toLowerCase();
+  return S.userDict[key] ? S.userDict[key].original : null;
+}
+
+function getUserDictKeys() {
+  if (!S.userDict) return [];
+  return Object.keys(S.userDict).sort((a, b) => {
+    const da = S.userDict[a], db = S.userDict[b];
+    if (db.count !== da.count) return db.count - da.count;
+    return db.lastSeen - da.lastSeen;
+  });
+}
+
 // ─── BONS D'ACHAT — Logique ───
 
 let currentVoucherType = 'bon';      // 'bon' | 'carte' | 'coupon'
@@ -944,6 +1011,11 @@ function addVoucher() {
     notes,
     mode: S.mode
   });
+  // Apprend automatiquement le magasin/enseigne saisi
+  if (store) {
+    const catGuess = localCat(store);
+    learnVendor(store, catGuess ? catGuess.idx : 7);
+  }
   // Reset
   ['v-label','v-store','v-amount','v-pct','v-code','v-notes','v-obtained','v-expires'].forEach(id => {
     const el = $(id); if (el) el.value = '';
@@ -1084,6 +1156,8 @@ function addInvoice() {
     pages: [...currentInvoicePages],
     mode: S.mode
   });
+  // Apprend automatiquement le vendeur saisi
+  if (vendor) learnVendor(vendor, cat);
   // Reset
   ['i-label','i-vendor','i-amount','i-date','i-notes'].forEach(id => {
     const el = $(id); if (el) el.value = '';
@@ -1901,7 +1975,7 @@ function voiceSearch(){
   recognition.start();
 }
 
-function ds(){const n=new Date();return{mode:"perso",yr:n.getFullYear(),mo:n.getMonth(),tab:"budget",tx:[],inc:[],bgt:{},hab:[],hl:{},rec:[],inst:[],vouchers:[],invoices:[]};}
+function ds(){const n=new Date();return{mode:"perso",yr:n.getFullYear(),mo:n.getMonth(),tab:"budget",tx:[],inc:[],bgt:{},hab:[],hl:{},rec:[],inst:[],vouchers:[],invoices:[],userDict:{}};}
 function ld(){try{const s=localStorage.getItem(SK);return s?JSON.parse(s):null}catch(e){return null}}
 function sv(){localStorage.setItem(SK,JSON.stringify(S))}
 function gid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -1914,6 +1988,7 @@ if(!S.rec) S.rec=[];
 if(!S.inst) S.inst=[];
 if(!S.vouchers) S.vouchers=[];
 if(!S.invoices) S.invoices=[];
+if(!S.userDict) S.userDict={};
 if(S._priv===undefined) S._priv=true;
 if(!S.theme) S.theme='dark';
 if(!S.goals) S.goals=[];
@@ -2179,16 +2254,26 @@ function getAlertsHTML() {
   const expiring = getExpiringVouchers(30);
   const expired = getExpiredVouchers();
   if (expiring.length === 0 && expired.length === 0) return '';
-  return `<div class="card fi fd1" style="border:1px solid rgba(239,71,111,0.3);background:rgba(239,71,111,0.06)">
-    <div class="ctitle" style="color:var(--red)">🚨 Alertes — ${expiring.length + expired.length}</div>
+  // Détecte si urgence critique (expirés ou ≤7 jours)
+  const hasUrgent = expired.length > 0 || expiring.some(v => daysUntil(v.expires) <= 7);
+  const cardStyle = hasUrgent
+    ? 'border:2px solid var(--red);background:rgba(239,71,111,0.12);box-shadow:0 0 0 4px rgba(239,71,111,0.08);animation:alertPulse 2s ease-in-out infinite'
+    : 'border:1px solid rgba(255,209,102,0.4);background:rgba(255,209,102,0.06)';
+  const titleEmoji = hasUrgent ? '🚨' : '⚠️';
+  const titleColor = hasUrgent ? 'var(--red)' : 'var(--yellow)';
+  return `<div class="card fi fd1" style="${cardStyle}">
+    <div class="ctitle" style="color:${titleColor};display:flex;align-items:center;gap:8px">
+      <span>${titleEmoji}</span>
+      <span>Alertes${hasUrgent ? ' urgentes' : ''} — ${expiring.length + expired.length}</span>
+    </div>
     ${expired.length > 0 ? `
       <div style="margin-top:8px;font-size:12px;color:var(--t2);margin-bottom:6px">⏰ Expiré${expired.length>1?'s':''} (${expired.length})</div>
       ${expired.map(v => `
-        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(239,71,111,0.1);border-radius:8px;margin-bottom:4px">
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(239,71,111,0.15);border-radius:8px;margin-bottom:4px;border-left:3px solid var(--red)">
           <span style="font-size:14px">${v.type==='bon'?'🎟️':v.type==='carte'?'💳':'🏷️'}</span>
           <div style="flex:1">
             <div style="font-size:12px;font-weight:500;color:var(--t1)">${v.label}</div>
-            <div style="font-size:10px;color:var(--red)">Expiré le ${v.expires}</div>
+            <div style="font-size:10px;color:var(--red);font-weight:600">Expiré le ${v.expires}</div>
           </div>
           <button class="bgh" style="font-size:10px;padding:4px 8px" onclick="toggleVoucherUsed('${v.id}')">Marquer utilisé</button>
         </div>
@@ -2199,13 +2284,14 @@ function getAlertsHTML() {
       ${expiring.map(v => {
         const d = daysUntil(v.expires);
         const urgency = d <= 7 ? 'var(--red)' : d <= 15 ? 'var(--yellow)' : 'var(--blue)';
-        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:rgba(255,255,255,0.04);border-radius:8px;margin-bottom:4px">
+        const isVeryUrgent = d <= 7;
+        return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:${isVeryUrgent?'rgba(239,71,111,0.1)':'rgba(255,255,255,0.04)'};border-radius:8px;margin-bottom:4px;${isVeryUrgent?'border-left:3px solid var(--red)':''}">
           <span style="font-size:14px">${v.type==='bon'?'🎟️':v.type==='carte'?'💳':'🏷️'}</span>
           <div style="flex:1">
-            <div style="font-size:12px;font-weight:500;color:var(--t1)">${v.label}</div>
+            <div style="font-size:12px;font-weight:${isVeryUrgent?'700':'500'};color:var(--t1)">${v.label}</div>
             <div style="font-size:10px;color:var(--t4)">${v.store || '—'} · ${v.amount ? fmt(v.amount) : (v.pct ? v.pct+'%' : '')}</div>
           </div>
-          <span style="font-size:10px;padding:3px 8px;border-radius:6px;background:${urgency}22;color:${urgency};font-weight:600">${d===0?'Auj.':d===1?'Demain':d+' j'}</span>
+          <span style="font-size:10px;padding:3px 8px;border-radius:6px;background:${urgency}33;color:${urgency};font-weight:700">${d===0?'Auj. !':d===1?'Demain !':d+' j'}</span>
         </div>`;
       }).join('')}
     ` : ''}
@@ -3028,6 +3114,9 @@ function addExp(){
     invoiceCreated = true;
   }
   
+  // Apprend automatiquement le vendeur saisi (enrichit le dictionnaire utilisateur)
+  if (v) learnVendor(v, c);
+  
   const cat=CATS[S.mode][c];
   sv();cm('m-exp');hideBadge();R();
   $('el').value='';$('ea').value='';$('ed').value='';$('ec').value='0';
@@ -3462,6 +3551,7 @@ function RB(cats){
     <div class="smart-summary fi">
       ${summaryLines.map(l=>`<div style="font-size:13px;color:var(--t2);margin-bottom:6px;line-height:1.5">${l}</div>`).join('')}
     </div>
+    ${getAlertsHTML()}
     <div class="srow fi">
       <div class="scard" onclick="togglePrivacy()" style="cursor:pointer">
         <div style="display:flex;justify-content:space-between;align-items:center"><div class="slbl">Revenus</div><span style="font-size:12px;color:var(--t4)">${S._priv?'👁️':'🔒'}</span></div>
@@ -3501,7 +3591,6 @@ function RB(cats){
       </div>`:''}
     </div>
 
-    ${getAlertsHTML()}
     ${getGoalsHTML()}
     ${getVouchersHTML()}
     ${getInvoicesHTML()}
