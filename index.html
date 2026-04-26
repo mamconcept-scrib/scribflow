@@ -1199,6 +1199,153 @@ if(!S.goals) S.goals=[];
 document.documentElement.className=S.theme;
 document.body.className=S.theme;
 
+function toggleTheme(){
+  S.theme=S.theme==='dark'?'light':'dark';
+  document.documentElement.className=S.theme;
+  document.body.className=S.theme;
+  // Update meta theme-color
+  document.querySelector('meta[name="theme-color"]').content=S.theme==='dark'?'#000000':'#f5f5f7';
+  sv();R();
+}
+
+function togglePrivacy(){
+  if(S._priv){
+    S._priv=false;sv();R();
+  } else {
+    if(getPIN()){
+      const ls=$('lockscreen');
+      ls.style.display='flex';
+      $('app').style.display='none';
+      $('pin-recovery').style.display='none';
+      $('lock-pad').style.display='grid';
+      $('lock-dots').style.display='flex';
+      pinBuffer='';
+      updateDots();
+      $('lock-error').textContent='';
+      $('lock-title').textContent='Entrez votre code pour afficher les revenus';
+      $('lock-setup-btn').style.display='none';
+      $('lock-disable-btn').style.display='none';
+      $('lock-forgot-btn').style.display=getSQ()?'inline-block':'none';
+      $('lock-cancel-btn').style.display='inline-block';
+      pinMode='unlock';
+      const origCheck=checkPin;
+      checkPin=function(){
+        if(pinBuffer===getPIN()){
+          $('lockscreen').style.display='none';
+          $('lock-cancel-btn').style.display='none';
+          $('app').style.display='block';
+          S._priv=true;sv();R();
+          checkPin=origCheck;
+        } else {
+          pinError('Code incorrect');
+          checkPin=origCheck;
+          setTimeout(()=>{checkPin=function(){
+            if(pinBuffer===getPIN()){
+              $('lockscreen').style.display='none';
+              $('lock-cancel-btn').style.display='none';
+              $('app').style.display='block';
+              S._priv=true;sv();R();
+              checkPin=origCheck;
+            } else {
+              pinError('Code incorrect');
+              checkPin=origCheck;
+            }
+          }},600);
+        }
+      };
+    } else {
+      S._priv=true;sv();R();
+    }
+  }
+}
+function cancelPinUnlock(){
+  $('lockscreen').style.display='none';
+  $('lock-cancel-btn').style.display='none';
+  $('app').style.display='block';
+}
+
+// ─── Objectifs d'épargne ───
+function openGoalModal(){om('m-goal')}
+function addGoal(){
+  const name=$('goal-name').value.trim();
+  const target=parseFloat($('goal-target').value);
+  const saved=parseFloat($('goal-saved').value)||0;
+  if(!name||!target) return;
+  S.goals.push({id:gid(),name,target,saved,mode:S.mode});
+  sv();cm('m-goal');R();
+  $('goal-name').value='';$('goal-target').value='';$('goal-saved').value='';
+  showToast(`✅ Objectif "${name}" créé`);
+}
+function addToGoal(id,amount){
+  const g=S.goals.find(x=>x.id===id);
+  if(!g) return;
+  const val=prompt(`Ajouter combien à "${g.name}" ? (actuellement ${fmt(g.saved)}/${fmt(g.target)})`,50);
+  if(val===null) return;
+  const add=parseFloat(val);
+  if(isNaN(add)||add<=0) return;
+  g.saved=Math.min(g.saved+add,g.target);
+  sv();R();
+  const pct=Math.round(g.saved/g.target*100);
+  showToast(g.saved>=g.target?`🎉 Objectif "${g.name}" atteint !`:`💰 ${fmt(add)} ajoutés à "${g.name}" (${pct}%)`);
+}
+function removeGoal(id){
+  const g=S.goals.find(x=>x.id===id);
+  if(!g) return;
+  showConfirm(`Supprimer l'objectif "${g.name}" ?`,()=>{
+    S.goals=S.goals.filter(x=>x.id!==id);sv();R();
+    showToast('🗑 Objectif supprimé','var(--red)');
+  });
+}
+function getGoalsHTML(){
+  const modeGoals=S.goals.filter(g=>g.mode===S.mode);
+  if(modeGoals.length===0){
+    return `<div class="card fi fd2">
+      <div class="section-toggle" onclick="toggleSection('goals')">
+        <span class="ctitle" style="margin:0">🎯 Objectifs d'épargne (0)</span>
+        <span class="chevron ${sectionStates['goals']?'':'open'}" data-chev="goals">▼</span>
+      </div>
+      <div class="section-body ${sectionStates['goals']?'collapsed':''}" data-section="goals" style="max-height:2000px">
+        <div style="padding:20px 0;text-align:center">
+          <div style="font-size:32px;margin-bottom:8px">🎯</div>
+          <div style="font-size:13px;color:var(--t2);margin-bottom:14px">Aucun objectif d'épargne pour le moment</div>
+          <button class="btn bg" onclick="om('m-goal')" style="font-size:12px;padding:8px 16px">+ Créer mon premier objectif</button>
+        </div>
+      </div>
+    </div>`;
+  }
+  return `<div class="card fi fd2">
+    <div class="section-toggle" onclick="toggleSection('goals')">
+      <span class="ctitle" style="margin:0">🎯 Objectifs d'épargne (${modeGoals.length})</span>
+      <span class="chevron ${sectionStates['goals']?'':'open'}" data-chev="goals">▼</span>
+    </div>
+    <div class="section-body ${sectionStates['goals']?'collapsed':''}" data-section="goals" style="max-height:2000px">
+    ${modeGoals.map(g=>{
+      const pct=Math.min(Math.round(g.saved/g.target*100),100);
+      const done=g.saved>=g.target;
+      const barColor=done?'var(--green)':pct>=60?'var(--yellow)':'var(--blue)';
+      return `<div style="padding:12px 0;border-bottom:1px solid var(--brd)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-size:14px;font-weight:600;color:var(--t1)">${done?'🎉':''} ${g.name}</span>
+          <div style="display:flex;gap:6px;align-items:center">
+            ${!done?`<button class="bo" style="font-size:10px;padding:4px 10px;border-color:var(--green);color:var(--green)" onclick="addToGoal('${g.id}')">+ Ajouter</button>`:''}
+            <button class="bgh" style="font-size:11px" onclick="removeGoal('${g.id}')">✕</button>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-family:var(--fd);font-size:16px;font-weight:700;color:${done?'var(--green)':'var(--t1)'}">${fmt(g.saved)}</span>
+          <span style="font-size:12px;color:var(--t3)">sur ${fmt(g.target)} — ${pct}%</span>
+        </div>
+        <div style="height:10px;background:var(--card);border-radius:5px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:${barColor};border-radius:5px;transition:width .5s ease"></div>
+        </div>
+        ${done?'<div style="font-size:11px;color:var(--green);margin-top:4px;text-align:center">Objectif atteint ! 🎉</div>':''}
+      </div>`;
+    }).join('')}
+    </div>
+  </div>`;
+}
+
+
 // ─── Modals ───
 function om(id){
   document.getElementById(id).classList.add('open');
