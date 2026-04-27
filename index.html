@@ -1423,9 +1423,13 @@ function toggleSection(id){
 
 // ─── Confirmation dialog ───
 let confirmCallback=null;
-function showConfirm(msg, cb){
+function showConfirm(msg, cb, btnLabel, btnColor){
   $('confirm-msg').textContent=msg;
   confirmCallback=cb;
+  // Customiser le bouton (par défaut : "Supprimer" rouge pour les suppressions)
+  const btn=$('confirm-btn');
+  btn.textContent=btnLabel||'Supprimer';
+  btn.style.background=btnColor||'var(--red)';
   om('m-confirm');
 }
 function execConfirm(){
@@ -1736,7 +1740,7 @@ function triggerImport(){
           if(data.cats){CATS=data.cats;saveCustomCats();}
           R();
           showToast('✅ Données importées avec succès');
-        });
+        },'Confirmer','var(--green)');
       }catch(err){showToast('❌ Erreur de lecture du fichier','var(--red)');}
     };
     reader.readAsText(file);
@@ -2083,7 +2087,14 @@ function rcp(){$('cpick').innerHTML=HC.map((c,i)=>`<div class="csw ${i===sci?'ac
 function addHab(){const n=$('hn').value.trim();if(!n)return;S.hab.push({id:gid(),n,c:HC[sci],m:S.mode});sv();cm('m-hab');R();$('hn').value=''}
 function rhab(id){S.hab=S.hab.filter(h=>h.id!==id);sv();R()}
 function thd(hid,day){const k=`${S.yr}-${S.mo}-${day}-${hid}`;S.hl[k]=!S.hl[k];sv();R()}
-function rst(){if(!confirm("Réinitialiser toutes les données ?"))return;S=ds();sv();R()}
+function rst(){
+  showConfirm("Réinitialiser toutes les données ? Cette action est irréversible.",()=>{
+    S=ds();
+    sv();
+    R();
+    showToast('🔄 Application réinitialisée','var(--orange)');
+  },'Réinitialiser','var(--red)');
+}
 function $(id){return document.getElementById(id)}
 
 // ─── Récurrents ───
