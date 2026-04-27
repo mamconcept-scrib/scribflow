@@ -81,6 +81,18 @@ body{background:#000000;background:var(--body-bg);color:var(--t1);font-family:va
 .bgh{background:none;border:none;color:var(--t4);cursor:pointer;font-size:14px}.bgh:hover{color:var(--red)}
 .brst{padding:6px 12px;border-radius:var(--rs);border:1px solid rgba(255,255,255,.06);background:transparent;color:var(--t4);font-size:11px;cursor:pointer;font-family:var(--fb)}
 
+/* Voucher type buttons */
+.vtype-btn{flex:1;padding:10px 6px;border-radius:var(--rs);border:1px solid var(--brd);background:rgba(255,255,255,0.03);color:var(--t2);font-size:12px;cursor:pointer;font-family:var(--fb);transition:all .15s}
+.vtype-btn.vtype-active{background:var(--warm);color:var(--bg1);border-color:var(--warm);font-weight:700}
+.vtype-btn:hover{background:rgba(255,255,255,0.08)}
+
+/* Voucher card on dashboard */
+.voucher-card{background:rgba(255,255,255,0.03);border:1px solid var(--brd);border-radius:var(--rs);padding:12px;margin-bottom:8px;position:relative;transition:all .15s}
+.voucher-card.expired{opacity:0.5;background:rgba(239,71,111,0.05);border-color:rgba(239,71,111,0.3)}
+.voucher-card.used{opacity:0.4;text-decoration:line-through}
+.voucher-card.expiring{border-color:var(--yellow);background:rgba(255,209,102,0.05)}
+.voucher-badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600;margin-right:6px}
+
 .arow{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
 .crow{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px}
 .cmain{flex:1 1 380px;min-width:280px}.cside{flex:0 1 280px;min-width:220px}
@@ -350,6 +362,44 @@ svg text{font-family:var(--fb)}
 </div></div>
 
 <!-- Bon d'achat / carte cadeau / coupon -->
+<div class="mo" id="m-voucher"><div class="md" style="max-width:440px">
+  <div class="mh"><span class="mt">🎟️ Nouveau bon</span><button class="mc" onclick="cm('m-voucher')">✕</button></div>
+  <div class="mf">
+
+    <!-- Type selector -->
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <button type="button" class="vtype-btn vtype-active" data-vtype="bon" onclick="setVoucherType('bon')">🎟️ Bon d'achat</button>
+      <button type="button" class="vtype-btn" data-vtype="coupon" onclick="setVoucherType('coupon')">🎫 Coupon</button>
+      <button type="button" class="vtype-btn" data-vtype="carte" onclick="setVoucherType('carte')">💳 Carte cadeau</button>
+    </div>
+
+    <!-- Bouton dictée -->
+    <button type="button" class="btn" onclick="startVoiceForVoucher()" style="width:100%;background:var(--blue);color:#fff;margin-bottom:10px;font-size:13px;padding:10px">
+      🎤 Dictée : "libellé, prix, enseigne"
+    </button>
+    <div id="voucher-voice-status" style="display:none;text-align:center;padding:8px;color:var(--blue);font-size:12px;font-style:italic;margin-bottom:8px"></div>
+
+    <input id="v-label" type="text" placeholder="Libellé (ex: Bon d'achat Nocibé)" style="margin-bottom:8px">
+    <input id="v-vendor" type="text" placeholder="Enseigne (optionnel)" style="margin-bottom:8px">
+    <input id="v-amount" type="number" step="0.01" placeholder="Valeur (€)" style="margin-bottom:8px">
+
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <div style="flex:1">
+        <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:4px">Date d'obtention</label>
+        <input id="v-obtained" type="date">
+      </div>
+      <div style="flex:1">
+        <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:4px">Expire le (optionnel)</label>
+        <input id="v-expires" type="date">
+      </div>
+    </div>
+
+    <textarea id="v-notes" placeholder="Notes (optionnel)" rows="2" style="margin-bottom:10px;width:100%;resize:vertical;font-family:inherit;font-size:14px"></textarea>
+
+    <button class="btn bp" onclick="addVoucher()" style="width:100%">Ajouter le bon</button>
+  </div>
+</div></div>
+
 <!-- Confirmation suppression -->
 <div class="mo" id="m-confirm"><div class="md" style="max-width:360px">
   <div class="mh"><span class="mt">⚠️ Confirmation</span><button class="mc" onclick="cm('m-confirm')">✕</button></div>
@@ -1180,7 +1230,7 @@ function voiceSearch(){
 }
 
 
-function ds(){const n=new Date();return{mode:"perso",yr:n.getFullYear(),mo:n.getMonth(),tab:"budget",tx:[],inc:[],bgt:{},hab:[],hl:{},rec:[],inst:[]};}
+function ds(){const n=new Date();return{mode:"perso",yr:n.getFullYear(),mo:n.getMonth(),tab:"budget",tx:[],inc:[],bgt:{},hab:[],hl:{},rec:[],inst:[],vouchers:[]};}
 function ld(){try{const s=localStorage.getItem(SK);return s?JSON.parse(s):null}catch(e){return null}}
 function sv(){localStorage.setItem(SK,JSON.stringify(S))}
 function gid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
@@ -1191,6 +1241,7 @@ S=ld()||ds();
 // Migrate old data
 if(!S.rec) S.rec=[];
 if(!S.inst) S.inst=[];
+if(!S.vouchers) S.vouchers=[];
 if(S._priv===undefined) S._priv=true;
 if(!S.theme) S.theme='dark';
 if(!S.goals) S.goals=[];
@@ -1346,6 +1397,249 @@ function getGoalsHTML(){
 }
 
 
+// ─── BONS D'ACHAT / COUPONS / CARTES CADEAUX ───
+
+let currentVoucherType = 'bon';
+
+function setVoucherType(type){
+  currentVoucherType = type;
+  document.querySelectorAll('.vtype-btn').forEach(btn=>{
+    btn.classList.toggle('vtype-active', btn.dataset.vtype === type);
+  });
+}
+
+// Calcul jours restants avant expiration (négatif si expiré)
+function daysUntil(dateStr){
+  if(!dateStr) return null;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const target = new Date(dateStr);
+  target.setHours(0,0,0,0);
+  return Math.round((target - today) / (1000*60*60*24));
+}
+
+// Status d'un bon : 'used' | 'expired' | 'expiring' (≤7j) | 'normal'
+function voucherStatus(v){
+  if(v.used) return 'used';
+  if(v.expires){
+    const d = daysUntil(v.expires);
+    if(d < 0) return 'expired';
+    if(d <= 7) return 'expiring';
+  }
+  return 'normal';
+}
+
+// Parser convention de dictée : "libellé, prix, enseigne"
+// Règles :
+// - Si prix annoncé → tout ce qui suit = enseigne
+// - Si rien après le prix → enseigne vide
+function parseVoucherVoice(text){
+  // Trouver le prix : "10 euros", "10€", "10 e", "10,50 euros", etc.
+  const priceMatch = text.match(/(\d+(?:[,.\s]\d+)?)\s*(euros?|€|e\b)/i);
+  
+  if(!priceMatch){
+    // Pas de prix détecté → tout est dans le libellé
+    return { label: text.trim(), amount: null, vendor: null };
+  }
+  
+  // Tout AVANT le prix = libellé
+  const beforePrice = text.substring(0, priceMatch.index).trim();
+  const label = beforePrice.replace(/[,;]\s*$/, '').trim();
+  
+  // Extraire le montant
+  const amount = parseFloat(priceMatch[1].replace(',', '.').replace(/\s/g, ''));
+  
+  // Tout APRÈS le prix = enseigne
+  const afterPrice = text.substring(priceMatch.index + priceMatch[0].length).trim();
+  const vendor = afterPrice.replace(/^[,;]\s*/, '').trim() || null;
+  
+  return { label, amount, vendor };
+}
+
+// Dictée vocale spécifique pour les bons
+function startVoiceForVoucher(){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){
+    showToast('🎤 Dictée non supportée sur ce navigateur','var(--red)');
+    return;
+  }
+  
+  releaseVoiceSession();
+  recognition = new SR();
+  recognition.lang = 'fr-FR';
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+  
+  const status = $('voucher-voice-status');
+  status.style.display = 'block';
+  status.textContent = '🎤 Écoute... Dis : "libellé, prix, enseigne"';
+  
+  recognition.onresult = (e)=>{
+    let transcript = '';
+    for(let i=0; i<e.results.length; i++){
+      transcript += e.results[i][0].transcript;
+    }
+    
+    if(e.results[e.results.length-1].isFinal){
+      // Appliquer corrections phonétiques Martinique
+      let corrected = transcript;
+      const keys = Object.keys(VOICE_CORRECTIONS).sort((a,b)=>b.length-a.length);
+      keys.forEach(wrong=>{
+        const right = VOICE_CORRECTIONS[wrong];
+        const re = new RegExp('\\b' + wrong.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+        corrected = corrected.replace(re, right);
+      });
+      
+      // Parser selon convention
+      const parsed = parseVoucherVoice(corrected);
+      
+      if(parsed.label) $('v-label').value = parsed.label;
+      if(parsed.amount) $('v-amount').value = parsed.amount;
+      if(parsed.vendor) $('v-vendor').value = parsed.vendor;
+      
+      status.textContent = '✅ ' + corrected;
+      setTimeout(()=>{ status.style.display = 'none'; }, 3000);
+    } else {
+      status.textContent = '🎤 ' + transcript;
+    }
+  };
+  
+  recognition.onerror = (e)=>{
+    status.textContent = '❌ Erreur : ' + e.error;
+    setTimeout(()=>{ status.style.display = 'none'; }, 3000);
+  };
+  
+  recognition.onend = ()=>{
+    isListening = false;
+    if(status.textContent.startsWith('🎤')) status.style.display = 'none';
+  };
+  
+  isListening = true;
+  recognition.start();
+}
+
+// Ajouter un bon
+function addVoucher(){
+  const label = $('v-label').value.trim();
+  const vendor = $('v-vendor').value.trim();
+  const amount = parseFloat($('v-amount').value);
+  const obtained = $('v-obtained').value;
+  const expires = $('v-expires').value;
+  const notes = $('v-notes').value.trim();
+  
+  if(!label || !amount || amount <= 0){
+    showToast('⚠️ Libellé et montant requis','var(--red)');
+    return;
+  }
+  
+  if(!obtained){
+    showToast('⚠️ Date d\'obtention requise','var(--red)');
+    return;
+  }
+  
+  S.vouchers.push({
+    id: gid(),
+    type: currentVoucherType,
+    label,
+    vendor: vendor || null,
+    amount,
+    obtained,
+    expires: expires || null,
+    used: false,
+    notes,
+    m: S.mode,
+    ts: Date.now()
+  });
+  
+  sv();
+  cm('m-voucher');
+  R();
+  
+  const typeLabel = currentVoucherType === 'bon' ? 'Bon d\'achat' : 
+                    currentVoucherType === 'coupon' ? 'Coupon' : 'Carte cadeau';
+  showToast(`✅ ${typeLabel} ajouté : ${label} (${fmt(amount)})`);
+}
+
+// Marquer un bon comme utilisé / non utilisé
+function toggleVoucherUsed(id){
+  const v = S.vouchers.find(x=>x.id===id);
+  if(!v) return;
+  v.used = !v.used;
+  sv();
+  R();
+  showToast(v.used ? '✅ Bon marqué comme utilisé' : '🔄 Bon réactivé');
+}
+
+// Supprimer un bon
+function deleteVoucher(id){
+  const v = S.vouchers.find(x=>x.id===id);
+  if(!v) return;
+  showConfirm(`Supprimer "${v.label}" ?`, ()=>{
+    S.vouchers = S.vouchers.filter(x=>x.id!==id);
+    sv();
+    R();
+    showToast('🗑 Bon supprimé','var(--red)');
+  });
+}
+
+// HTML de la section bons sur le dashboard
+function getVouchersHTML(){
+  const modeVouchers = S.vouchers.filter(v => v.m === S.mode);
+  if(modeVouchers.length === 0) return '';
+  
+  // Trier : non-utilisés d'abord, puis par date d'expiration croissante
+  const sorted = [...modeVouchers].sort((a,b)=>{
+    if(a.used !== b.used) return a.used ? 1 : -1;
+    if(a.expires && b.expires) return a.expires.localeCompare(b.expires);
+    if(a.expires) return -1;
+    if(b.expires) return 1;
+    return b.ts - a.ts;
+  });
+  
+  const totalActive = sorted.filter(v=>!v.used && voucherStatus(v)!=='expired').reduce((s,v)=>s+v.amount, 0);
+  
+  return `
+    <div class="card fi fd3">
+      <div class="section-toggle" onclick="toggleSection('vouchers')">
+        <span class="ctitle" style="margin:0">🎟️ Mes bons (${sorted.length}) — ${fmt(totalActive)} dispo</span>
+        <span class="chevron ${sectionStates['vouchers']?'':'open'}" data-chev="vouchers">▼</span>
+      </div>
+      <div class="section-body ${sectionStates['vouchers']?'collapsed':''}" data-section="vouchers" style="max-height:3000px">
+      ${sorted.map(v=>{
+        const status = voucherStatus(v);
+        const days = v.expires ? daysUntil(v.expires) : null;
+        const typeIcon = v.type === 'bon' ? '🎟️' : v.type === 'coupon' ? '🎫' : '💳';
+        let expiresInfo = '';
+        if(v.expires){
+          if(status === 'expired') expiresInfo = `<span style="color:var(--red);font-size:11px;font-weight:600">⏰ Expiré le ${v.expires.split('-').reverse().join('/')}</span>`;
+          else if(status === 'expiring') expiresInfo = `<span style="color:var(--yellow);font-size:11px;font-weight:600">⚠️ Expire dans ${days}j (${v.expires.split('-').reverse().join('/')})</span>`;
+          else expiresInfo = `<span style="color:var(--t4);font-size:11px">Expire dans ${days}j</span>`;
+        }
+        return `
+          <div class="voucher-card ${status==='expired'?'expired':''} ${status==='expiring'?'expiring':''} ${v.used?'used':''}">
+            <div style="display:flex;align-items:flex-start;gap:10px">
+              <span style="font-size:24px">${typeIcon}</span>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:14px;color:var(--t1);margin-bottom:2px">${v.label}</div>
+                ${v.vendor ? `<div style="font-size:12px;color:var(--t3);margin-bottom:4px">📍 ${v.vendor}</div>` : ''}
+                <div style="font-size:16px;font-weight:700;color:var(--green);margin-bottom:4px">${fmt(v.amount)}</div>
+                ${expiresInfo}
+                ${v.notes ? `<div style="font-size:11px;color:var(--t4);margin-top:4px;font-style:italic">${v.notes}</div>` : ''}
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <button class="bgh" onclick="toggleVoucherUsed('${v.id}')" title="${v.used?'Réactiver':'Marquer utilisé'}" style="font-size:18px">${v.used?'↩️':'✓'}</button>
+                <button class="bgh" onclick="deleteVoucher('${v.id}')" title="Supprimer" style="font-size:14px">🗑</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+      <button class="btn bbl" onclick="om('m-voucher')" style="width:100%;margin-top:8px;font-size:12px;padding:8px">+ Ajouter un bon</button>
+      </div>
+    </div>`;
+}
+
 // ─── Modals ───
 
 function om(id){
@@ -1392,6 +1686,14 @@ function om(id){
   if(id==='m-goal'){
     $('goal-name').value='';$('goal-target').value='';$('goal-saved').value='';
   }
+  if(id==='m-voucher'){
+    ['v-label','v-vendor','v-amount','v-notes'].forEach(f=>{const e=$(f);if(e)e.value='';});
+    const today=new Date().toISOString().slice(0,10);
+    if($('v-obtained')) $('v-obtained').value=today;
+    if($('v-expires')) $('v-expires').value='';
+    setVoucherType('bon');
+    const vs=$('voucher-voice-status');if(vs)vs.style.display='none';
+  }
 }
 function cm(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.mo').forEach(el=>{el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open')})});
@@ -1418,7 +1720,7 @@ function showToast(msg, color='var(--green)', duration=3000){
 }
 
 // ─── Collapsible sections ───
-const sectionStates={rec:true,tx:true,subs:true,goals:true};
+const sectionStates={rec:true,tx:true,subs:true,goals:true,vouchers:true};
 function toggleSection(id){
   sectionStates[id]=!sectionStates[id];
   const body=document.querySelector(`[data-section="${id}"]`);
@@ -2503,6 +2805,7 @@ function RB(cats){
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="showIncDetail()">💵 Détail revenus</button>
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="showCatManager()">⚙️ Gérer catégories</button>
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="openGoalModal()">🎯 Objectif épargne</button>
+      <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="om('m-voucher')">🎟️ Bon / coupon</button>
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="exportData()">💾 Sauvegarder</button>
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="triggerImport()">📂 Restaurer</button>
       <button class="btn" style="background:rgba(255,255,255,0.08);color:var(--t2)" onclick="showExportModal()">📊 Exporter Excel</button>
@@ -2516,6 +2819,7 @@ function RB(cats){
     </div>
 
     ${getGoalsHTML()}
+    ${getVouchersHTML()}
     ${(modeRec.length>0||modeInst.length>0)?`
     <div class="card fi fd3">
       <div class="section-toggle" onclick="toggleSection('rec')">
