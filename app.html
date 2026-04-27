@@ -1361,14 +1361,26 @@ function om(id){
     }
   });
   // Reset fields when opening financial modals (not when editing)
+  // Date par défaut : aujourd'hui si mois en cours, sinon dernier jour du mois affiché
+  function getDefaultDate(){
+    const now=new Date();
+    if(S.yr===now.getFullYear() && S.mo===now.getMonth()){
+      return now.toISOString().slice(0,10); // Aujourd'hui
+    }
+    // Dernier jour du mois affiché
+    const lastDay=dim(S.yr,S.mo);
+    const m=String(S.mo+1).padStart(2,'0');
+    const d=String(lastDay).padStart(2,'0');
+    return `${S.yr}-${m}-${d}`;
+  }
   if(id==='m-exp' && !editingExpId){
-    $('el').value='';$('ea').value='';$('ed').value='';
+    $('el').value='';$('ea').value='';$('ed').value=getDefaultDate();
     const vs=$('voice-status');if(vs)vs.style.display='none';
     const ab=$('ai-badge');if(ab)ab.style.display='none';
     hideBadge();
   }
   if(id==='m-inc' && !editingIncId){
-    $('il').value='';$('ia').value='';$('id2').value='';
+    $('il').value='';$('ia').value='';$('id2').value=getDefaultDate();
   }
   if(id==='m-rec'){
     $('rl').value='';$('ra').value='';$('rstart').value='';$('rend').value='';$('rrenew').value='';
@@ -2009,7 +2021,12 @@ function getSmartSummary(){
 }
 
 function addExp(){
-  const l=$('el').value.trim(),a=parseFloat($('ea').value),c=parseInt($('ec').value),d=$('ed').value||new Date().toISOString().slice(0,10);
+  // Date par défaut intelligente selon le mois affiché
+  const now=new Date();
+  const fallbackDate = (S.yr===now.getFullYear() && S.mo===now.getMonth())
+    ? now.toISOString().slice(0,10)
+    : `${S.yr}-${String(S.mo+1).padStart(2,'0')}-${String(dim(S.yr,S.mo)).padStart(2,'0')}`;
+  const l=$('el').value.trim(),a=parseFloat($('ea').value),c=parseInt($('ec').value),d=$('ed').value||fallbackDate;
   if(!l||!a)return;
   const isEdit = !!editingExpId;
   if (editingExpId) {
@@ -2026,7 +2043,12 @@ function addExp(){
   showToast(isEdit?`✏️ Dépense modifiée : ${l} — ${fmt(a)}`:`✅ Dépense ajoutée : ${l} — ${fmt(a)} (${cat?.i} ${cat?.n})`);
 }
 function addInc(){
-  const l=$('il').value.trim(),a=parseFloat($('ia').value),d=$('id2').value||new Date().toISOString().slice(0,10);
+  // Date par défaut intelligente selon le mois affiché
+  const now=new Date();
+  const fallbackDate = (S.yr===now.getFullYear() && S.mo===now.getMonth())
+    ? now.toISOString().slice(0,10)
+    : `${S.yr}-${String(S.mo+1).padStart(2,'0')}-${String(dim(S.yr,S.mo)).padStart(2,'0')}`;
+  const l=$('il').value.trim(),a=parseFloat($('ia').value),d=$('id2').value||fallbackDate;
   if(!l||!a)return;
   const isEdit = !!editingIncId;
   if (editingIncId) {
