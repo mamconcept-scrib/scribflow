@@ -1282,6 +1282,8 @@ function toggleExpPrivacy(){
 // Helper réutilisable : exige le PIN avant d'exécuter une action sensible
 // Si pas de PIN configuré → exécute directement
 // Usage: requirePinThen('Confirmer suppression du revenu', () => { ... })
+let pendingPinCallback = null; // callback à exécuter quand PIN OK
+
 function requirePinThen(title, callback){
   if(!getPIN()){
     // Pas de PIN configuré → action directe
@@ -1289,34 +1291,27 @@ function requirePinThen(title, callback){
     return;
   }
   
-  const ls=$('lockscreen');
-  ls.style.display='flex';
-  $('app').style.display='none';
-  $('pin-recovery').style.display='none';
-  $('lock-pad').style.display='grid';
-  $('lock-dots').style.display='flex';
-  pinBuffer='';
-  updateDots();
-  $('lock-error').textContent='';
-  $('lock-title').textContent=title;
-  $('lock-setup-btn').style.display='none';
-  $('lock-disable-btn').style.display='none';
-  $('lock-forgot-btn').style.display='none';
-  $('lock-cancel-btn').style.display='inline-block';
-  pinMode='action';
-  const origCheck=checkPin;
-  checkPin=function(){
-    if(pinBuffer===getPIN()){
-      $('lockscreen').style.display='none';
-      $('lock-cancel-btn').style.display='none';
-      $('app').style.display='block';
-      checkPin=origCheck;
-      callback(); // ✅ PIN OK → exécute l'action
-    } else {
-      pinError('Code incorrect');
-      checkPin=origCheck;
-    }
-  };
+  // Stocker le callback dans une variable globale plutôt que de monkey-patcher checkPin
+  pendingPinCallback = callback;
+  
+  // setTimeout pour s'assurer que les modals précédents sont bien fermés
+  setTimeout(()=>{
+    const ls=$('lockscreen');
+    ls.style.display='flex';
+    $('app').style.display='none';
+    $('pin-recovery').style.display='none';
+    $('lock-pad').style.display='grid';
+    $('lock-dots').style.display='flex';
+    pinBuffer='';
+    updateDots();
+    $('lock-error').textContent='';
+    $('lock-title').textContent=title;
+    $('lock-setup-btn').style.display='none';
+    $('lock-disable-btn').style.display='none';
+    $('lock-forgot-btn').style.display='none';
+    $('lock-cancel-btn').style.display='inline-block';
+    pinMode='action';
+  }, 100);
 }
 
 function togglePrivacy(){
@@ -1324,46 +1319,16 @@ function togglePrivacy(){
     S._priv=false;sv();R();
   } else {
     if(getPIN()){
-      const ls=$('lockscreen');
-      ls.style.display='flex';
-      $('app').style.display='none';
-      $('pin-recovery').style.display='none';
-      $('lock-pad').style.display='grid';
-      $('lock-dots').style.display='flex';
-      pinBuffer='';
-      updateDots();
-      $('lock-error').textContent='';
-      $('lock-title').textContent='Entrez votre code pour afficher les revenus';
-      $('lock-setup-btn').style.display='none';
-      $('lock-disable-btn').style.display='none';
-      $('lock-forgot-btn').style.display=getSQ()?'inline-block':'none';
-      $('lock-cancel-btn').style.display='inline-block';
-      pinMode='unlock';
-      const origCheck=checkPin;
-      checkPin=function(){
-        if(pinBuffer===getPIN()){
-          $('lockscreen').style.display='none';
-          $('lock-cancel-btn').style.display='none';
-          $('app').style.display='block';
-          S._priv=true;sv();R();
-          checkPin=origCheck;
-        } else {
-          pinError('Code incorrect');
-          checkPin=origCheck;
-          setTimeout(()=>{checkPin=function(){
-            if(pinBuffer===getPIN()){
-              $('lockscreen').style.display='none';
-              $('lock-cancel-btn').style.display='none';
-              $('app').style.display='block';
-              S._priv=true;sv();R();
-              checkPin=origCheck;
-            } else {
-              pinError('Code incorrect');
-              checkPin=origCheck;
-            }
-          }},600);
-        }
-      };
+      // Utiliser le helper standardisé
+      requirePinThen('Entrez votre code pour afficher les revenus', ()=>{
+        S._priv=true;
+        sv();
+        R();
+      });
+      // Pour togglePrivacy, on affiche aussi le bouton "Code oublié"
+      if(getSQ()){
+        setTimeout(()=>{ $('lock-forgot-btn').style.display='inline-block'; }, 150);
+      }
     } else {
       S._priv=true;sv();R();
     }
@@ -1373,6 +1338,10 @@ function cancelPinUnlock(){
   $('lockscreen').style.display='none';
   $('lock-cancel-btn').style.display='none';
   $('app').style.display='block';
+  // Restaurer l'état complet
+  pinMode='unlock';
+  pendingPinCallback=null;
+  pinBuffer='';
 }
 
 // ─── Objectifs d'épargne ───
@@ -2260,8 +2229,20 @@ function triggerImport(){
         if(!data.state||!data.version){showToast('❌ Fichier invalide','var(--red)');return;}
         showConfirm('Importer ces données ? Cela remplacera toutes vos données actuelles.',()=>{
           requirePinThen('Code requis pour importer', ()=>{
-            S=data.state;sv();
+            // Préserver l'état de privacy actuel pour ne pas re-verrouiller surprise
+            const currentPriv = S._priv;
+            S = data.state;
+            S._priv = currentPriv; // Garder le statut privacy actuel
+            // Migration des nouveaux champs si absents dans la sauvegarde
+            if(!S.rec) S.rec=[];
+            if(!S.inst) S.inst=[];
+            if(!S.vouchers) S.vouchers=[];
+            if(!S.goals) S.goals=[];
+            if(!S.theme) S.theme=document.documentElement.className||'dark';
+            sv();
             if(data.cats){CATS=data.cats;saveCustomCats();}
+            // Forcer un re-render complet de l'app
+            $('app').innerHTML='';
             R();
             showToast('✅ Données importées avec succès');
           });
@@ -3220,6 +3201,19 @@ function checkPin(){
     } else {
       pinFailCount++;
       pinError('Code incorrect'+(pinFailCount>=3?' — Essayez "Code oublié ?"':''));
+    }
+  } else if(pinMode==='action'){
+    // Action sensible nécessitant un PIN (Reset, Import, Suppression revenu, etc.)
+    if(pinBuffer===getPIN()){
+      $('lockscreen').style.display='none';
+      $('lock-cancel-btn').style.display='none';
+      $('app').style.display='block';
+      pinMode='unlock'; // Restaurer le mode par défaut
+      const cb = pendingPinCallback;
+      pendingPinCallback = null;
+      if(cb) cb(); // Exécuter le callback de l'action
+    } else {
+      pinError('Code incorrect');
     }
   } else if(pinMode==='setup_new'){
     pinSetupTemp=pinBuffer;
