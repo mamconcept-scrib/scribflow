@@ -907,78 +907,63 @@ function parseVoiceInput(text) {
   const original = fixVoiceText(text.trim());
   let processed = original.toLowerCase();
   
-  // ─── Extract amount ───
+  // ─── CONVENTION DE DICTÉE ───
+  // [libellé], [prix], [enseigne ou catégorie]
+  // Ex: "Restaurant chez Nana, 45 euros, Loisirs"
+  //     "Carrefour, 87 euros"
+  //     "Cinéma 12 euros loisirs" ← marche aussi sans virgule
+  
+  // Étape 1 : Extraire le prix
   let amount = null;
   
-  // Pattern: "X euros Y" or "X euros Y centimes" → X.Y
+  // Pattern avec euros et centimes : "X euros Y centimes"
   const euroCentMatch = processed.match(/(\d+[\s,.]?\d*)\s*euros?\s+(\d{1,2})\s*(centimes?|cents?)?/i);
   if (euroCentMatch) {
     amount = parseFloat(euroCentMatch[1].replace(/[\s,]/g, '.')) + parseFloat(euroCentMatch[2]) / 100;
-    processed = processed.replace(euroCentMatch[0], '');
+    processed = processed.replace(euroCentMatch[0], '|PRIX|');
   }
   
   if (!amount) {
-    // Pattern: "X,YY euros" or "X.YY euros" or "X euros"
-    const euroMatch = processed.match(/(\d+[\s,.]?\d*)\s*€|(\d+[\s,.]?\d*)\s*euros?/i);
+    // Pattern: "X,YY euros" ou "X.YY euros" ou "X euros" ou "X €" ou "X e"
+    const euroMatch = processed.match(/(\d+(?:[,.\s]\d+)?)\s*(?:euros?|€|e\b)/i);
     if (euroMatch) {
-      const numStr = (euroMatch[1] || euroMatch[2]).replace(/[\s]/g, '').replace(',', '.');
+      const numStr = euroMatch[1].replace(/[\s]/g, '').replace(',', '.');
       amount = parseFloat(numStr);
-      processed = processed.replace(euroMatch[0], '');
+      processed = processed.replace(euroMatch[0], '|PRIX|');
     }
   }
   
+  // Pattern nombres en lettres
   if (!amount) {
-    // French spoken numbers
     const numWords = {
       'un':1,'deux':2,'trois':3,'quatre':4,'cinq':5,'six':6,'sept':7,'huit':8,'neuf':9,
       'dix':10,'onze':11,'douze':12,'treize':13,'quatorze':14,'quinze':15,'seize':16,
       'vingt':20,'trente':30,'quarante':40,'cinquante':50,'soixante':60,
       'cent':100,'cents':100,'mille':1000,
     };
-    // Compound numbers: "quatre-vingt-sept" → 87, "soixante-quinze" → 75
-    const compoundPatterns = [
-      { re: /quatre[\s-]vingt[\s-]dix[\s-](\w+)/i, base: 90, addWord: true },
-      { re: /quatre[\s-]vingts?/i, val: 80 },
-      { re: /soixante[\s-]dix[\s-](\w+)/i, base: 70, addWord: true },
-      { re: /soixante[\s-](\w+)/i, base: 60, addWord: true },
-    ];
     
-    // Simple approach: try to find "NUMBER euros" in spoken form
     const spokenEuroMatch = processed.match(/([\w\s-]+?)\s*euros?/i);
     if (spokenEuroMatch) {
       const numText = spokenEuroMatch[1].trim();
       const words = numText.split(/[\s-]+/);
-      let total = 0;
-      let current = 0;
-      let found = false;
+      let total = 0, current = 0, found = false;
       
       for (const w of words) {
         if (numWords[w] !== undefined) {
           found = true;
           const v = numWords[w];
-          if (v === 100) {
-            current = current === 0 ? 100 : current * 100;
-          } else if (v === 1000) {
-            current = current === 0 ? 1000 : current * 1000;
-            total += current;
-            current = 0;
-          } else if (v >= 20 && v <= 60) {
-            current += v;
-          } else {
-            current += v;
-          }
+          if (v === 100) current = current === 0 ? 100 : current * 100;
+          else if (v === 1000) { current = current === 0 ? 1000 : current * 1000; total += current; current = 0; }
+          else current += v;
         }
       }
       total += current;
       
-      // Special compounds
       if (!found || total === 0) {
-        // Try quatre-vingt patterns
         if (/quatre[\s-]vingt/i.test(numText)) {
           total = 80;
           const after = numText.replace(/quatre[\s-]vingts?[\s-]*/i, '').trim();
           if (after && numWords[after]) total += numWords[after];
-          // quatre-vingt-dix
           if (/dix/i.test(after)) {
             total = 90;
             const after2 = after.replace(/dix[\s-]*/i, '').trim();
@@ -996,36 +981,76 @@ function parseVoiceInput(text) {
       
       if (found && total > 0) {
         amount = total;
-        processed = processed.replace(spokenEuroMatch[0], '');
+        processed = processed.replace(spokenEuroMatch[0], '|PRIX|');
       }
     }
   }
   
-  // ─── Clean up label ───
-  let label = processed
+  // Étape 2 : Découper la phrase autour du marqueur |PRIX|
+  let label = '';
+  let suggestion = '';
+  
+  if (processed.includes('|PRIX|')) {
+    const parts = processed.split('|PRIX|');
+    label = parts[0].trim();
+    suggestion = (parts[1] || '').trim();
+  } else {
+    label = processed.trim();
+  }
+  
+  // Nettoyer
+  label = label
+    .replace(/[,;.]\s*$/g, '')
     .replace(/\s+/g, ' ')
     .replace(/^\s*(pour|chez|à|au|aux|en|de|du|des|le|la|les|un|une)\s+/i, '')
     .trim();
   
-  // Capitalize first letter
+  suggestion = suggestion
+    .replace(/^\s*[,;.]\s*/g, '')
+    .replace(/[,;.]\s*$/g, '')
+    .replace(/\s+/g, ' ')
+    .replace(/^\s*(pour|chez|à|au|aux|en|de|du|des|le|la|les|un|une)\s+/i, '')
+    .trim();
+  
+  // Capitaliser
   if (label.length > 0) {
     label = label.charAt(0).toUpperCase() + label.slice(1);
   }
   
-  // ─── Apply results ───
+  // Étape 3 : Appliquer
   if (label) {
     $('el').value = label;
-    autoCat(label);
   }
   if (amount && !isNaN(amount) && amount > 0) {
     $('ea').value = Math.round(amount * 100) / 100;
   }
   
-  // Show confirmation
-  const parts = [];
-  if (label) parts.push(`"${label}"`);
-  if (amount) parts.push(fmt(amount));
-  showVoiceStatus(`✅ Compris : ${parts.join(' — ') || original}`, false);
+  // Étape 4 : Catégorisation intelligente
+  let categoryFound = false;
+  if (suggestion) {
+    const cats = CATS[S.mode];
+    const matchCatIdx = cats.findIndex(c => 
+      c.n.toLowerCase() === suggestion.toLowerCase() && !c.hidden
+    );
+    if (matchCatIdx >= 0) {
+      $('ec').value = matchCatIdx;
+      categoryFound = true;
+    }
+  }
+  
+  // Si pas de catégorie explicite, autoCat sur libellé + suggestion combinés
+  if (!categoryFound && label) {
+    const textForCat = suggestion ? `${label} ${suggestion}` : label;
+    autoCat(textForCat);
+  }
+  
+  // Étape 5 : Feedback
+  const feedbackParts = [];
+  if (label) feedbackParts.push(`"${label}"`);
+  if (amount) feedbackParts.push(fmt(amount));
+  if (suggestion && !categoryFound) feedbackParts.push(`📍 ${suggestion}`);
+  if (categoryFound) feedbackParts.push(`✓ ${suggestion}`);
+  showVoiceStatus(`✅ Compris : ${feedbackParts.join(' — ') || original}`, false);
   
   // Force stop microphone
   if (recognition) {
