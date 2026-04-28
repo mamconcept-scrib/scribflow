@@ -291,10 +291,10 @@ svg text{font-family:var(--fb)}
   <div id="voice-status" style="display:none;font-size:13px;padding:12px 16px;border-radius:10px;background:rgba(239,71,111,0.15);border:1px solid rgba(239,71,111,0.3);color:var(--red);font-weight:600;text-align:center;margin-bottom:8px"></div>
   
   <input id="el" placeholder="Libellé (ex: Courses, Repas, Plein...)" oninput="autoCat(this.value)" style="margin-bottom:8px">
-  <input id="ev" placeholder="Enseigne (ex: Carrefour, Total, Thiriet...)" list="vendor-suggestions" autocomplete="off" style="margin-bottom:8px">
+  <input id="ea" placeholder="Montant (€)" type="number" step="0.01" style="margin-bottom:8px">
+  <input id="ev" placeholder="Enseigne (optionnel, ex: Carrefour, Total...)" list="vendor-suggestions" autocomplete="off" style="margin-bottom:8px">
   <datalist id="vendor-suggestions"></datalist>
   <div id="ai-badge" style="display:none;font-size:11px;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--t3);align-items:center;gap:6px;margin-bottom:8px"></div>
-  <input id="ea" placeholder="Montant (€)" type="number" step="0.01" style="margin-bottom:8px">
   <select id="ec" style="margin-bottom:8px"></select>
   <input id="ed" type="date" style="margin-bottom:10px">
   <button class="btn bp" onclick="addExp()" style="width:100%">Ajouter</button>
@@ -311,9 +311,9 @@ svg text{font-family:var(--fb)}
   <div class="voice-status-generic" data-for="il" style="display:none;margin-bottom:8px"></div>
   
   <input id="il" placeholder="Libellé (ex: Salaire, Vente, Prime...)" style="margin-bottom:8px">
-  <input id="iv" placeholder="Source/Débiteur (ex: CHU, Airbnb, Vinted...)" list="source-suggestions" autocomplete="off" style="margin-bottom:8px">
-  <datalist id="source-suggestions"></datalist>
   <input id="ia" placeholder="Montant (€)" type="number" step="0.01" style="margin-bottom:8px">
+  <input id="iv" placeholder="Source/Débiteur (optionnel, ex: CHU, Airbnb...)" list="source-suggestions" autocomplete="off" style="margin-bottom:8px">
+  <datalist id="source-suggestions"></datalist>
   <input id="id2" type="date" style="margin-bottom:10px">
   <button class="btn bg" onclick="addInc()" style="width:100%">Ajouter</button>
 </div></div></div>
@@ -407,8 +407,8 @@ svg text{font-family:var(--fb)}
     <div id="voucher-voice-status" style="display:none;text-align:center;padding:8px;color:var(--blue);font-size:12px;font-style:italic;margin-bottom:8px"></div>
 
     <input id="v-label" type="text" placeholder="Libellé (ex: Bon d'achat Nocibé)" style="margin-bottom:8px">
-    <input id="v-vendor" type="text" placeholder="Enseigne (optionnel)" style="margin-bottom:8px">
     <input id="v-amount" type="number" step="0.01" placeholder="Valeur (€)" style="margin-bottom:8px">
+    <input id="v-vendor" type="text" placeholder="Enseigne (optionnel)" style="margin-bottom:8px">
 
     <div style="margin-bottom:8px">
       <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:4px">Date d'obtention</label>
@@ -1362,7 +1362,11 @@ function requirePinThen(title, callback){
   // Stocker le callback dans une variable globale plutôt que de monkey-patcher checkPin
   pendingPinCallback = callback;
   
-  // setTimeout pour s'assurer que les modals précédents sont bien fermés
+  // FORCE close de TOUS les modaux avant d'ouvrir le lockscreen
+  // (évite les conflits visuels avec showConfirm, modals d'import, etc.)
+  document.querySelectorAll('.mo.open').forEach(m => m.classList.remove('open'));
+  
+  // setTimeout 280ms pour laisser le temps aux modaux de fermer (transition CSS = 200ms)
   setTimeout(()=>{
     const ls=$('lockscreen');
     ls.style.display='flex';
@@ -1371,6 +1375,7 @@ function requirePinThen(title, callback){
     $('lock-pad').style.display='grid';
     $('lock-dots').style.display='flex';
     pinBuffer='';
+    pinFailCount=0;
     updateDots();
     $('lock-error').textContent='';
     $('lock-title').textContent=title;
@@ -1379,7 +1384,7 @@ function requirePinThen(title, callback){
     $('lock-forgot-btn').style.display='none';
     $('lock-cancel-btn').style.display='inline-block';
     pinMode='action';
-  }, 100);
+  }, 280);
 }
 
 function togglePrivacy(){
