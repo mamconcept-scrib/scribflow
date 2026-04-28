@@ -1037,6 +1037,7 @@ function parseVoiceInput(text) {
   
   // Étape 4 : Catégorisation intelligente
   let categoryFound = false;
+  pendingVendor = ''; // Reset
   if (suggestion) {
     const cats = CATS[S.mode];
     const matchCatIdx = cats.findIndex(c => 
@@ -1045,6 +1046,11 @@ function parseVoiceInput(text) {
     if (matchCatIdx >= 0) {
       $('ec').value = matchCatIdx;
       categoryFound = true;
+    } else {
+      // La suggestion N'EST PAS une catégorie → c'est une enseigne
+      // On la stocke dans pendingVendor pour qu'elle soit sauvegardée par addExp
+      // Capitaliser proprement
+      pendingVendor = suggestion.charAt(0).toUpperCase() + suggestion.slice(1);
     }
   }
   
@@ -1941,8 +1947,11 @@ function showCatDetail(){
       <div style="margin-left:30px">
         ${txs.sort((a,b)=>a.d>b.d?-1:a.d<b.d?1:(b.ts||0)-(a.ts||0)).map(t=>`
           <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
-            <span style="font-size:12px;color:var(--t2)">${t.l}</span>
-            <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;min-width:0">
+              <span style="font-size:12px;color:var(--t2)">${t.l}</span>
+              ${t.vendor ? `<div style="font-size:10px;color:var(--t4);margin-top:2px">📍 ${t.vendor}</div>` : ''}
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
               <span style="font-size:11px;color:var(--t4)">${fmtDateFR(t.d)}</span>
               <span style="font-family:var(--fd);font-size:12px;color:var(--red)">${fmt(t.a)}</span>
             </div>
@@ -2291,7 +2300,7 @@ function updateSearch(val){
         if(t._type==='inc'){
           return `<div class="txrow txi"><span style="font-size:16px">💵</span><span class="txl">${t.l} ${badge}</span><span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--green)">${S._priv?'+'+fmt(t.a):'••••••'}</span>${t.id&&S._priv?`<button class="bgh" onclick="editInc('${t.id}')">✏️</button><button class="bgh" onclick="rinc('${t.id}')">✕</button>`:''}</div>`;
         } else {
-          return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.l} ${badge}</span><span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--red)">-${fmt(t.a)}</span>${t.id?`<button class="bgh" onclick="editExp('${t.id}')">✏️</button><button class="bgh" onclick="rtx('${t.id}')">✕</button>`:''}</div>`;
+          return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.l}${t.vendor?` <span style="color:var(--t4);font-size:11px">📍${t.vendor}</span>`:''} ${badge}</span><span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--red)">-${fmt(t.a)}</span>${t.id?`<button class="bgh" onclick="editExp('${t.id}')">✏️</button><button class="bgh" onclick="rtx('${t.id}')">✕</button>`:''}</div>`;
         }
       }).join('');
       if(sq && fExp.length>0){
@@ -2615,6 +2624,9 @@ function getSmartSummary(){
   return lines;
 }
 
+// Variable temporaire pour stocker l'enseigne dictée entre parseVoice et addExp
+let pendingVendor = '';
+
 function addExp(){
   // Date par défaut intelligente selon le mois affiché
   const now=new Date();
@@ -2622,21 +2634,27 @@ function addExp(){
     ? now.toISOString().slice(0,10)
     : `${S.yr}-${String(S.mo+1).padStart(2,'0')}-${String(dim(S.yr,S.mo)).padStart(2,'0')}`;
   const l=$('el').value.trim(),a=parseFloat($('ea').value),c=parseInt($('ec').value),d=$('ed').value||fallbackDate;
+  const vendor = pendingVendor; // Récupérer l'enseigne dictée
   if(!l||!a)return;
   const isEdit = !!editingExpId;
   if (editingExpId) {
     const tx = S.tx.find(t=>t.id===editingExpId);
-    if(tx){ tx.l=l; tx.a=a; tx.ci=c; tx.d=d; }
+    if(tx){ tx.l=l; tx.a=a; tx.ci=c; tx.d=d; if(vendor) tx.vendor=vendor; }
     editingExpId = null;
   } else {
-    S.tx.push({id:gid(),l,a,ci:c,d,m:S.mode,ts:Date.now()});
+    const newTx = {id:gid(),l,a,ci:c,d,m:S.mode,ts:Date.now()};
+    if(vendor) newTx.vendor = vendor;
+    S.tx.push(newTx);
   }
   const cat=CATS[S.mode][c];
+  pendingVendor = ''; // Reset après usage
   sv();cm('m-exp');hideBadge();R();$('el').value='';$('ea').value='';$('ed').value='';$('ec').value='0';
   const vs=$('voice-status');if(vs)vs.style.display='none';
   $('m-exp').querySelector('.mt').textContent='Nouvelle dépense';
-  showToast(isEdit?`✏️ Dépense modifiée : ${l} — ${fmt(a)}`:`✅ Dépense ajoutée : ${l} — ${fmt(a)} (${cat?.i} ${cat?.n})`);
+  const vendorInfo = vendor ? ` 📍 ${vendor}` : '';
+  showToast(isEdit?`✏️ Dépense modifiée : ${l} — ${fmt(a)}${vendorInfo}`:`✅ Dépense ajoutée : ${l} — ${fmt(a)} (${cat?.i} ${cat?.n})${vendorInfo}`);
 }
+
 function addInc(){
   // Date par défaut intelligente selon le mois affiché
   const now=new Date();
@@ -3179,7 +3197,7 @@ function RB(cats){
             <span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--green)">${S._priv?'+'+fmt(t.a):'••••••'}</span>
             ${t.id&&S._priv?`<button class="bgh" onclick="editInc('${t.id}')" title="Modifier">✏️</button><button class="bgh" onclick="rinc('${t.id}')">✕</button>`:''}</div>`;
           } else {
-            return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.l} ${badge}</span>
+            return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.l}${t.vendor?` <span style="color:var(--t4);font-size:11px">📍${t.vendor}</span>`:''} ${badge}</span>
             <span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--red)">-${fmt(t.a)}</span>
             ${t.id?`<button class="bgh" onclick="editExp('${t.id}')" title="Modifier">✏️</button><button class="bgh" onclick="rtx('${t.id}')">✕</button>`:''}</div>`;
           }
