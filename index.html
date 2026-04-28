@@ -2049,19 +2049,73 @@ function doShowIncDetail(){
 }
 
 // ─── Gestion des catégories ───
+// État local : afficher ou non les catégories masquées dans le manager
+let showHiddenCats = false;
+
+function toggleShowHiddenCats(){
+  showHiddenCats = !showHiddenCats;
+  showCatManager();
+}
+
 function showCatManager(){
   const cats=CATS[S.mode];
-  let html=cats.map((cat,i)=>`
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05)">
-      <span style="font-size:20px">${cat.i}</span>
-      <span style="width:14px;height:14px;border-radius:4px;background:${cat.c};flex-shrink:0"></span>
-      <span style="flex:1;font-size:13px;color:var(--t1)">${cat.n}</span>
-      <button class="bgh" onclick="editCategory(${i})" title="Modifier" style="font-size:12px">✏️</button>
-      ${i>=8?`<button class="bgh" onclick="removeCategory(${i})" title="Supprimer" style="font-size:12px">✕</button>`:''}
-    </div>
-  `).join('');
+  
+  // Compter les masquées
+  const hiddenCount = cats.filter(c => c.hidden).length;
+  
+  // Filtrer ou pas selon showHiddenCats
+  const visibleCats = showHiddenCats ? cats : cats.filter(c => !c.hidden);
+  
+  let html='';
+  
+  // Header avec toggle si des catégories sont masquées
+  if(hiddenCount > 0){
+    html += `
+      <div style="background:rgba(255,255,255,0.04);border-radius:8px;padding:8px 12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:12px;color:var(--t3)">${hiddenCount} catégorie${hiddenCount>1?'s':''} masquée${hiddenCount>1?'s':''}</span>
+        <button class="bo" onclick="toggleShowHiddenCats()" style="font-size:11px;padding:4px 10px">${showHiddenCats?'Cacher':'Afficher'}</button>
+      </div>
+    `;
+  }
+  
+  // Liste des catégories
+  html += visibleCats.map((cat)=>{
+    // Retrouver l'index réel (car visibleCats peut être filtré)
+    const i = cats.indexOf(cat);
+    const isDivers = cat.n === 'Divers';
+    const isHidden = cat.hidden;
+    
+    return `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);${isHidden?'opacity:0.5':''}">
+        <span style="font-size:20px">${cat.i}</span>
+        <span style="width:14px;height:14px;border-radius:4px;background:${cat.c};flex-shrink:0"></span>
+        <span style="flex:1;font-size:13px;color:var(--t1)">${cat.n}${isDivers?' <span style="font-size:10px;color:var(--t4)">(refuge système)</span>':''}${isHidden?' <span style="font-size:10px;color:var(--yellow)">(masquée)</span>':''}</span>
+        <button class="bgh" onclick="editCategory(${i})" title="Renommer" style="font-size:14px">✏️</button>
+        ${!isDivers ? `<button class="bgh" onclick="toggleHideCategory(${i})" title="${isHidden?'Afficher':'Masquer'}" style="font-size:14px">${isHidden?'👁️':'👁️‍🗨️'}</button>` : ''}
+        ${!isDivers ? `<button class="bgh" onclick="removeCategory(${i})" title="Supprimer" style="font-size:14px;color:var(--red)">🗑</button>` : ''}
+      </div>
+    `;
+  }).join('');
+  
   $('catmgr-body').innerHTML=html;
   om('m-catmgr');
+}
+
+// Masquer / afficher une catégorie (sans la supprimer)
+function toggleHideCategory(idx){
+  const cat = CATS[S.mode][idx];
+  if(!cat) return;
+  if(cat.n === 'Divers'){
+    showToast('⚠️ La catégorie "Divers" ne peut pas être masquée','var(--red)');
+    return;
+  }
+  
+  cat.hidden = !cat.hidden;
+  saveCustomCats();
+  showCatManager();
+  R();
+  
+  showToast(cat.hidden ? `👁️‍🗨️ "${cat.n}" masquée` : `👁️ "${cat.n}" affichée`);
 }
 
 function addCategory(){
@@ -2750,7 +2804,8 @@ function rinst(id){
 
 function updCatSelects(){
   const cats=CATS[S.mode];
-  const html=cats.map((c,i)=>`<option value="${i}">${c.i} ${c.n}</option>`).join('');
+  const visibleCats = cats.map((c,i)=>({...c,_idx:i})).filter(c=>!c.hidden);
+  const html=visibleCats.map(c=>`<option value="${c._idx}">${c.i} ${c.n}</option>`).join('');
   $('rcat').innerHTML=html;$('intcat').innerHTML=html;
 }
 
@@ -2838,7 +2893,9 @@ function svgLine(labels,data,color,w,h,unit){
 // ─── RENDER ───
 function R(){
   const cats=CATS[S.mode];
-  $('ec').innerHTML=cats.map((c,i)=>`<option value="${i}">${c.i} ${c.n}</option>`).join('');
+  // Filtrer les catégories masquées pour les sélecteurs (mais garder l'index original)
+  const visibleCats = cats.map((c,i)=>({...c,_idx:i})).filter(c=>!c.hidden);
+  $('ec').innerHTML=visibleCats.map(c=>`<option value="${c._idx}">${c.i} ${c.n}</option>`).join('');
   if(S.tab==='budget')RB(cats);else RH(cats);
 }
 
