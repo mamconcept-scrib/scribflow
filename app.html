@@ -283,26 +283,35 @@ svg text{font-family:var(--fb)}
 <!-- Dépense ponctuelle -->
 <div class="mo" id="m-exp"><div class="md"><div class="mh"><span class="mt">Nouvelle dépense</span><button class="mc" onclick="cm('m-exp')">✕</button></div><div class="mf">
   <div id="mb-exp" class="mode-banner"></div>
-  <div style="display:flex;gap:8px;align-items:center">
-    <input id="el" placeholder="Libellé (ex: Carrefour, Uber, Pharmacie...)" oninput="autoCat(this.value)" style="flex:1">
-    <button id="mic-btn" onclick="startVoice()" style="width:44px;height:44px;border-radius:12px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0" title="Dicter la dépense">🎤</button>
-  </div>
-  <div id="voice-status" style="display:none;font-size:13px;padding:12px 16px;border-radius:10px;background:rgba(239,71,111,0.15);border:1px solid rgba(239,71,111,0.3);color:var(--red);font-weight:600;text-align:center"></div>
-  <div id="ai-badge" style="display:none;font-size:11px;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--t3);align-items:center;gap:6px"></div>
-  <input id="ea" placeholder="Montant (€)" type="number" step="0.01">
-  <select id="ec"></select><input id="ed" type="date"><button class="btn bp" onclick="addExp()">Ajouter</button>
+  
+  <!-- Bouton dictée gros et explicite (cohérent avec les bons) -->
+  <button id="mic-btn" type="button" onclick="startVoice()" style="width:100%;background:var(--blue);color:#fff;margin-bottom:10px;font-size:13px;padding:10px;border-radius:var(--rs);border:none;font-weight:700;font-family:var(--fb);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s">
+    🎤 Dictée : "libellé, prix, [enseigne ou catégorie]"
+  </button>
+  <div id="voice-status" style="display:none;font-size:13px;padding:12px 16px;border-radius:10px;background:rgba(239,71,111,0.15);border:1px solid rgba(239,71,111,0.3);color:var(--red);font-weight:600;text-align:center;margin-bottom:8px"></div>
+  
+  <input id="el" placeholder="Libellé (ex: Carrefour, Uber, Pharmacie...)" oninput="autoCat(this.value)" style="margin-bottom:8px">
+  <div id="ai-badge" style="display:none;font-size:11px;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--t3);align-items:center;gap:6px;margin-bottom:8px"></div>
+  <input id="ea" placeholder="Montant (€)" type="number" step="0.01" style="margin-bottom:8px">
+  <select id="ec" style="margin-bottom:8px"></select>
+  <input id="ed" type="date" style="margin-bottom:10px">
+  <button class="btn bp" onclick="addExp()" style="width:100%">Ajouter</button>
 </div></div></div>
 
 <!-- Revenu ponctuel -->
 <div class="mo" id="m-inc"><div class="md"><div class="mh"><span class="mt">Nouveau revenu</span><button class="mc" onclick="cm('m-inc')">✕</button></div><div class="mf">
   <div id="mb-inc" class="mode-banner"></div>
-  <div style="display:flex;gap:8px;align-items:center">
-    <input id="il" placeholder="Libellé (ex: Airbnb, Vinted, Prime...)" style="flex:1">
-    <button class="mic-btn-ui" onclick="startVoiceFor('il','ia')" title="Dicter le revenu">🎤</button>
-  </div>
-  <div class="voice-status-generic" data-for="il" style="display:none"></div>
-  <input id="ia" placeholder="Montant (€)" type="number" step="0.01">
-  <input id="id2" type="date"><button class="btn bg" onclick="addInc()">Ajouter</button>
+  
+  <!-- Bouton dictée gros et explicite (cohérent avec dépenses et bons) -->
+  <button type="button" onclick="startVoiceFor('il','ia')" style="width:100%;background:var(--blue);color:#fff;margin-bottom:10px;font-size:13px;padding:10px;border-radius:var(--rs);border:none;font-weight:700;font-family:var(--fb);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s">
+    🎤 Dictée : "libellé, prix"
+  </button>
+  <div class="voice-status-generic" data-for="il" style="display:none;margin-bottom:8px"></div>
+  
+  <input id="il" placeholder="Libellé (ex: Airbnb, Vinted, Prime...)" style="margin-bottom:8px">
+  <input id="ia" placeholder="Montant (€)" type="number" step="0.01" style="margin-bottom:8px">
+  <input id="id2" type="date" style="margin-bottom:10px">
+  <button class="btn bg" onclick="addInc()" style="width:100%">Ajouter</button>
 </div></div></div>
 
 <!-- Budget -->
@@ -1153,15 +1162,15 @@ function parseVoiceGeneric(text) {
   const euroCentMatch = processed.match(/(\d+[\s,.]?\d*)\s*euros?\s+(\d{1,2})\s*(centimes?|cents?)?/i);
   if (euroCentMatch) {
     amount = parseFloat(euroCentMatch[1].replace(/[\s,]/g, '.')) + parseFloat(euroCentMatch[2]) / 100;
-    processed = processed.replace(euroCentMatch[0], '');
+    processed = processed.replace(euroCentMatch[0], '|PRIX|');
   }
   
   if (!amount) {
-    const euroMatch = processed.match(/(\d+[\s,.]?\d*)\s*€|(\d+[\s,.]?\d*)\s*euros?/i);
+    const euroMatch = processed.match(/(\d+(?:[,.\s]\d+)?)\s*(?:euros?|€|e\b)/i);
     if (euroMatch) {
-      const numStr = (euroMatch[1] || euroMatch[2]).replace(/[\s]/g, '').replace(',', '.');
+      const numStr = euroMatch[1].replace(/[\s]/g, '').replace(',', '.');
       amount = parseFloat(numStr);
-      processed = processed.replace(euroMatch[0], '');
+      processed = processed.replace(euroMatch[0], '|PRIX|');
     }
   }
   
@@ -1208,16 +1217,30 @@ function parseVoiceGeneric(text) {
       }
       if (found && total > 0) {
         amount = total;
-        processed = processed.replace(spokenEuroMatch[0], '');
+        processed = processed.replace(spokenEuroMatch[0], '|PRIX|');
       }
     }
   }
   
-  // Clean label
-  let label = processed.replace(/\s+/g, ' ').replace(/^\s*(pour|chez|à|au|aux|en|de|du|des|le|la|les|un|une)\s+/i, '').trim();
+  // Découper autour du marqueur prix : libellé AVANT, suggestion APRÈS
+  let label = '';
+  let suggestion = '';
+  if (processed.includes('|PRIX|')) {
+    const parts = processed.split('|PRIX|');
+    label = parts[0].trim();
+    suggestion = (parts[1] || '').trim();
+  } else {
+    label = processed.trim();
+  }
+  
+  // Nettoyer le libellé
+  label = label.replace(/[,;.]\s*$/g, '').replace(/\s+/g, ' ').replace(/^\s*(pour|chez|à|au|aux|en|de|du|des|le|la|les|un|une)\s+/i, '').trim();
   if (label.length > 0) label = label.charAt(0).toUpperCase() + label.slice(1);
   
-  return { label, amount };
+  // Nettoyer la suggestion (peut servir comme info supplémentaire dans le libellé si pertinent)
+  suggestion = suggestion.replace(/^\s*[,;.]\s*/g, '').replace(/[,;.]\s*$/g, '').trim();
+  
+  return { label, amount, suggestion };
 }
 
 // ─── Voice search ───
