@@ -82,9 +82,9 @@ body{background:#000000;background:var(--body-bg);color:var(--t1);font-family:va
 .brst{padding:6px 12px;border-radius:var(--rs);border:1px solid rgba(255,255,255,.06);background:transparent;color:var(--t4);font-size:11px;cursor:pointer;font-family:var(--fb)}
 
 /* Voucher type buttons */
-.vtype-btn{flex:1;padding:10px 6px;border-radius:var(--rs);border:1px solid var(--brd);background:rgba(255,255,255,0.03);color:var(--t2);font-size:12px;cursor:pointer;font-family:var(--fb);transition:all .15s}
-.vtype-btn.vtype-active{background:var(--warm);color:var(--bg1);border-color:var(--warm);font-weight:700}
-.vtype-btn:hover{background:rgba(255,255,255,0.08)}
+.vtype-btn{flex:1;padding:10px 6px;border-radius:var(--rs);border:1px solid var(--brd);background:rgba(255,255,255,0.03);color:var(--t2);font-size:12px;cursor:pointer;font-family:var(--fb);transition:all .15s;-webkit-tap-highlight-color:transparent}
+.vtype-btn.vtype-active{background:var(--warm) !important;color:var(--bg1) !important;border-color:var(--warm) !important;font-weight:700}
+.vtype-btn:not(.vtype-active):hover{background:rgba(255,255,255,0.08)}
 
 /* Voucher card on dashboard */
 .voucher-card{background:rgba(255,255,255,0.03);border:1px solid var(--brd);border-radius:var(--rs);padding:12px;margin-bottom:8px;position:relative;transition:all .15s}
@@ -92,6 +92,20 @@ body{background:#000000;background:var(--body-bg);color:var(--t1);font-family:va
 .voucher-card.used{opacity:0.4;text-decoration:line-through}
 .voucher-card.expiring{border-color:var(--yellow);background:rgba(255,209,102,0.05)}
 .voucher-badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:10px;font-weight:600;margin-right:6px}
+
+/* Alertes en haut du dashboard */
+.alerts-card{background:linear-gradient(135deg,rgba(239,71,111,0.15) 0%,rgba(255,209,102,0.10) 100%);border:1px solid rgba(239,71,111,0.3);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.alerts-card:hover{transform:translateY(-1px);border-color:rgba(239,71,111,0.5)}
+.alerts-card.alerts-pulse{animation:alertPulse 2s ease-in-out infinite}
+@keyframes alertPulse{0%,100%{box-shadow:0 0 0 0 rgba(239,71,111,0.4)}50%{box-shadow:0 0 0 8px rgba(239,71,111,0)}}
+.alerts-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;color:var(--t1)}
+.alerts-list{display:flex;flex-direction:column;gap:6px}
+.alert-item{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:13px;color:var(--t2)}
+.alert-icon{font-size:14px;flex-shrink:0}
+.alert-text{flex:1;line-height:1.3}
+.alert-critical .alert-text{color:var(--red);font-weight:600}
+.alert-warning .alert-text{color:var(--yellow)}
+.alert-expired .alert-text{color:var(--t4);text-decoration:line-through}
 
 .arow{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
 .crow{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px}
@@ -383,15 +397,13 @@ svg text{font-family:var(--fb)}
     <input id="v-vendor" type="text" placeholder="Enseigne (optionnel)" style="margin-bottom:8px">
     <input id="v-amount" type="number" step="0.01" placeholder="Valeur (€)" style="margin-bottom:8px">
 
-    <div style="display:flex;gap:8px;margin-bottom:8px">
-      <div style="flex:1">
-        <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:4px">Date d'obtention</label>
-        <input id="v-obtained" type="date">
-      </div>
-      <div style="flex:1">
-        <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:4px">Expire le (optionnel)</label>
-        <input id="v-expires" type="date">
-      </div>
+    <div style="margin-bottom:8px">
+      <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:4px">Date d'obtention</label>
+      <input id="v-obtained" type="date" style="width:100%">
+    </div>
+    <div style="margin-bottom:8px">
+      <label style="font-size:11px;color:var(--t3);display:block;margin-bottom:4px">Expire le (optionnel)</label>
+      <input id="v-expires" type="date" style="width:100%">
     </div>
 
     <textarea id="v-notes" placeholder="Notes (optionnel)" rows="2" style="margin-bottom:10px;width:100%;resize:vertical;font-family:inherit;font-size:14px"></textarea>
@@ -1260,6 +1272,53 @@ function toggleTheme(){
   sv();R();
 }
 
+// Masquage des Dépenses (et Solde) - en RAM uniquement, reset à chaque ouverture
+let privExp = false; // false = masqué par défaut
+function toggleExpPrivacy(){
+  privExp = !privExp;
+  R();
+}
+
+// Helper réutilisable : exige le PIN avant d'exécuter une action sensible
+// Si pas de PIN configuré → exécute directement
+// Usage: requirePinThen('Confirmer suppression du revenu', () => { ... })
+function requirePinThen(title, callback){
+  if(!getPIN()){
+    // Pas de PIN configuré → action directe
+    callback();
+    return;
+  }
+  
+  const ls=$('lockscreen');
+  ls.style.display='flex';
+  $('app').style.display='none';
+  $('pin-recovery').style.display='none';
+  $('lock-pad').style.display='grid';
+  $('lock-dots').style.display='flex';
+  pinBuffer='';
+  updateDots();
+  $('lock-error').textContent='';
+  $('lock-title').textContent=title;
+  $('lock-setup-btn').style.display='none';
+  $('lock-disable-btn').style.display='none';
+  $('lock-forgot-btn').style.display='none';
+  $('lock-cancel-btn').style.display='inline-block';
+  pinMode='action';
+  const origCheck=checkPin;
+  checkPin=function(){
+    if(pinBuffer===getPIN()){
+      $('lockscreen').style.display='none';
+      $('lock-cancel-btn').style.display='none';
+      $('app').style.display='block';
+      checkPin=origCheck;
+      callback(); // ✅ PIN OK → exécute l'action
+    } else {
+      pinError('Code incorrect');
+      checkPin=origCheck;
+    }
+  };
+}
+
 function togglePrivacy(){
   if(S._priv){
     S._priv=false;sv();R();
@@ -1576,7 +1635,24 @@ function toggleVoucherUsed(id){
 function deleteVoucher(id){
   const v = S.vouchers.find(x=>x.id===id);
   if(!v) return;
-  showConfirm(`Supprimer "${v.label}" ?`, ()=>{
+  
+  // Message adapté selon l'état du bon
+  let msg;
+  if(v.used){
+    msg = `Supprimer définitivement "${v.label}" ? (Ce bon est marqué comme utilisé)`;
+  } else {
+    const status = voucherStatus(v);
+    if(status === 'expired'){
+      msg = `Supprimer "${v.label}" ?\n\nCe bon est expiré, vous pouvez le supprimer sans risque.`;
+    } else if(status === 'expiring'){
+      msg = `⚠️ Supprimer "${v.label}" ?\n\nAttention : ce bon expire bientôt et n'a pas été utilisé.`;
+    } else {
+      const valueInfo = `Valeur : ${fmt(v.amount)}`;
+      msg = `Supprimer "${v.label}" ?\n\n${valueInfo}\nCe bon est encore valide et non utilisé.`;
+    }
+  }
+  
+  showConfirm(msg, ()=>{
     S.vouchers = S.vouchers.filter(x=>x.id!==id);
     sv();
     R();
@@ -1585,6 +1661,83 @@ function deleteVoucher(id){
 }
 
 // HTML de la section bons sur le dashboard
+// HTML de la zone d'alertes en haut du dashboard
+function getAlertsHTML(){
+  const modeVouchers = S.vouchers.filter(v => v.m === S.mode && !v.used);
+  const alerts = [];
+  
+  modeVouchers.forEach(v => {
+    if(!v.expires) return;
+    const days = daysUntil(v.expires);
+    const typeIcon = v.type === 'bon' ? '🎟️' : v.type === 'coupon' ? '🎫' : '💳';
+    
+    if(days < 0){
+      alerts.push({
+        urgency: 'expired',
+        icon: '⚫',
+        text: `${typeIcon} ${v.label} expiré${v.vendor ? ' ('+v.vendor+')' : ''}`,
+        days: days
+      });
+    } else if(days <= 3){
+      alerts.push({
+        urgency: 'critical',
+        icon: '🔴',
+        text: `${typeIcon} ${v.label} expire ${days===0?'aujourd\'hui':days===1?'demain':'dans '+days+'j'}${v.vendor ? ' ('+v.vendor+')' : ''}`,
+        days: days
+      });
+    } else if(days <= 14){
+      alerts.push({
+        urgency: 'warning',
+        icon: '🟡',
+        text: `${typeIcon} ${v.label} expire dans ${days}j${v.vendor ? ' ('+v.vendor+')' : ''}`,
+        days: days
+      });
+    }
+  });
+  
+  if(alerts.length === 0) return '';
+  
+  // Trier par urgence (critique > warning > expired) puis par jours croissants
+  const order = {critical:0, warning:1, expired:2};
+  alerts.sort((a,b)=>{
+    if(order[a.urgency] !== order[b.urgency]) return order[a.urgency] - order[b.urgency];
+    return Math.abs(a.days) - Math.abs(b.days);
+  });
+  
+  const hasCritical = alerts.some(a => a.urgency === 'critical');
+  
+  return `
+    <div class="alerts-card ${hasCritical?'alerts-pulse':''}" onclick="scrollToVouchers()">
+      <div class="alerts-header">
+        <span style="font-size:14px;font-weight:700">⚠️ Alertes (${alerts.length})</span>
+        <span style="font-size:11px;color:var(--t3)">Tap pour voir</span>
+      </div>
+      <div class="alerts-list">
+        ${alerts.slice(0,5).map(a=>`
+          <div class="alert-item alert-${a.urgency}">
+            <span class="alert-icon">${a.icon}</span>
+            <span class="alert-text">${a.text}</span>
+          </div>
+        `).join('')}
+        ${alerts.length > 5 ? `<div class="alert-item" style="justify-content:center;color:var(--t3);font-style:italic">+ ${alerts.length-5} autre${alerts.length-5>1?'s':''}...</div>` : ''}
+      </div>
+    </div>`;
+}
+
+// Scroll vers la section bons d'achat
+function scrollToVouchers(){
+  const section = document.querySelector('[data-section="vouchers"]');
+  if(section){
+    // Ouvrir la section si fermée
+    if(sectionStates['vouchers']){
+      toggleSection('vouchers');
+    }
+    setTimeout(()=>{
+      section.scrollIntoView({behavior:'smooth', block:'start'});
+    }, 100);
+  }
+}
+
 function getVouchersHTML(){
   const modeVouchers = S.vouchers.filter(v => v.m === S.mode);
   if(modeVouchers.length === 0) return '';
@@ -1973,14 +2126,69 @@ function editCategory(idx){
 function removeCategory(idx){
   const cat=CATS[S.mode][idx];
   if(!cat) return;
+  
+  // Trouver l'index de "Divers" pour migration des transactions existantes
+  const diversIdx = CATS[S.mode].findIndex(c => c.n === 'Divers');
+  
+  // Compter les transactions affectées (toutes : tx + récurrents + échéanciers)
+  const txAffected = S.tx.filter(t => t.m === S.mode && t.ci === idx).length;
+  const recAffected = S.rec.filter(r => r.m === S.mode && r.ci === idx).length;
+  const instAffected = S.inst.filter(i => i.m === S.mode && i.ci === idx).length;
+  const totalAffected = txAffected + recAffected + instAffected;
+  
+  // Empêcher la suppression de "Divers" lui-même (catégorie système de fallback)
+  if(cat.n === 'Divers'){
+    showToast('⚠️ La catégorie "Divers" ne peut pas être supprimée','var(--red)');
+    return;
+  }
+  
+  // Si pas de catégorie Divers trouvée, on ne peut pas migrer
+  if(diversIdx === -1){
+    showToast('⚠️ Catégorie "Divers" introuvable, suppression impossible','var(--red)');
+    return;
+  }
+  
   cm('m-catmgr');
   setTimeout(()=>{
-    showConfirm(`Supprimer la catégorie "${cat.i} ${cat.n}" ? Les transactions existantes garderont leur ancienne catégorie.`,()=>{
+    const msg = totalAffected > 0
+      ? `Supprimer "${cat.i} ${cat.n}" ?\n\n${totalAffected} transaction${totalAffected>1?'s':''} (et récurrents associés) ${totalAffected>1?'seront recatégorisées':'sera recatégorisée'} en "Divers".`
+      : `Supprimer la catégorie "${cat.i} ${cat.n}" ?`;
+    
+    showConfirm(msg,()=>{
+      // 1. Migrer toutes les transactions du mode courant qui pointent sur idx → diversIdx
+      S.tx.forEach(t => {
+        if(t.m === S.mode && t.ci === idx) t.ci = diversIdx;
+      });
+      S.rec.forEach(r => {
+        if(r.m === S.mode && r.ci === idx) r.ci = diversIdx;
+      });
+      S.inst.forEach(i => {
+        if(i.m === S.mode && i.ci === idx) i.ci = diversIdx;
+      });
+      
+      // 2. Réindexer : toutes les transactions avec ci > idx doivent décrémenter
+      // Et attention au diversIdx s'il était > idx
+      S.tx.forEach(t => {
+        if(t.m === S.mode && t.ci > idx) t.ci--;
+      });
+      S.rec.forEach(r => {
+        if(r.m === S.mode && r.ci > idx) r.ci--;
+      });
+      S.inst.forEach(i => {
+        if(i.m === S.mode && i.ci > idx) i.ci--;
+      });
+      
+      // 3. Supprimer la catégorie
       CATS[S.mode].splice(idx,1);
       saveCustomCats();
+      sv();
       R();
-      showToast('🗑 Catégorie supprimée','var(--red)');
-    });
+      
+      const successMsg = totalAffected > 0
+        ? `🗑 Catégorie supprimée — ${totalAffected} transaction${totalAffected>1?'s':''} migrée${totalAffected>1?'s':''} vers "Divers"`
+        : '🗑 Catégorie supprimée';
+      showToast(successMsg, 'var(--orange)');
+    },'Supprimer','var(--red)');
   },250);
 }
 
@@ -2051,10 +2259,12 @@ function triggerImport(){
         const data=JSON.parse(ev.target.result);
         if(!data.state||!data.version){showToast('❌ Fichier invalide','var(--red)');return;}
         showConfirm('Importer ces données ? Cela remplacera toutes vos données actuelles.',()=>{
-          S=data.state;sv();
-          if(data.cats){CATS=data.cats;saveCustomCats();}
-          R();
-          showToast('✅ Données importées avec succès');
+          requirePinThen('Code requis pour importer', ()=>{
+            S=data.state;sv();
+            if(data.cats){CATS=data.cats;saveCustomCats();}
+            R();
+            showToast('✅ Données importées avec succès');
+          });
         },'Confirmer','var(--green)');
       }catch(err){showToast('❌ Erreur de lecture du fichier','var(--red)');}
     };
@@ -2400,7 +2610,13 @@ function rtx(id){
 function rinc(id){
   const inc=S.inc.find(t=>t.id===id);
   if(!inc) return;
-  showConfirm(`Supprimer le revenu "${inc.l}" (${fmt(inc.a)}) ?`,()=>{S.inc=S.inc.filter(t=>t.id!==id);sv();R();showToast('🗑 Revenu supprimé','var(--red)');});
+  showConfirm(`Supprimer le revenu "${inc.l}" (${fmt(inc.a)}) ?`,()=>{
+    requirePinThen('Code requis pour supprimer ce revenu', ()=>{
+      S.inc=S.inc.filter(t=>t.id!==id);
+      sv();R();
+      showToast('🗑 Revenu supprimé','var(--red)');
+    });
+  });
 }
 
 function obm(){const k=`${S.yr}-${S.mo}-${S.mode}`;$('bv').value=S.bgt[k]||'';om('m-bgt')}
@@ -2414,10 +2630,12 @@ function rhab(id){S.hab=S.hab.filter(h=>h.id!==id);sv();R()}
 function thd(hid,day){const k=`${S.yr}-${S.mo}-${day}-${hid}`;S.hl[k]=!S.hl[k];sv();R()}
 function rst(){
   showConfirm("Réinitialiser toutes les données ? Cette action est irréversible.",()=>{
-    S=ds();
-    sv();
-    R();
-    showToast('🔄 Application réinitialisée','var(--orange)');
+    requirePinThen('Code requis pour réinitialiser', ()=>{
+      S=ds();
+      sv();
+      R();
+      showToast('🔄 Application réinitialisée','var(--orange)');
+    });
   },'Réinitialiser','var(--red)');
 }
 function $(id){return document.getElementById(id)}
@@ -2761,6 +2979,7 @@ function RB(cats){
   const summaryLines=getSmartSummary();
 
   app.innerHTML=`${rHead()}${rNav()}
+    ${getAlertsHTML()}
     ${alertsHTML}
     <div class="smart-summary fi">
       ${summaryLines.map(l=>`<div style="font-size:13px;color:var(--t2);margin-bottom:6px;line-height:1.5">${l}</div>`).join('')}
@@ -2770,8 +2989,11 @@ function RB(cats){
         <div style="display:flex;justify-content:space-between;align-items:center"><div class="slbl">Revenus</div><span style="font-size:12px;color:var(--t4)">${S._priv?'👁️':'🔒'}</span></div>
         <div class="sval" style="color:var(--green)">${S._priv?fmt(ti):'••••••'}</div>
       </div>
-      <div class="scard"><div class="slbl">Dépenses</div><div class="sval" style="color:var(--red)">${fmt(te)}</div></div>
-      <div class="scard"><div class="slbl">Solde</div><div class="sval" style="color:${bal>=0?'var(--green)':'var(--red)'}">${S._priv?fmt(bal):'••••••'}</div></div>
+      <div class="scard" onclick="toggleExpPrivacy()" style="cursor:pointer">
+        <div style="display:flex;justify-content:space-between;align-items:center"><div class="slbl">Dépenses</div><span style="font-size:12px;color:var(--t4)">${privExp?'👁️':'👁️‍🗨️'}</span></div>
+        <div class="sval" style="color:var(--red)">${privExp?fmt(te):'••••••'}</div>
+      </div>
+      <div class="scard"><div class="slbl">Solde</div><div class="sval" style="color:${bal>=0?'var(--green)':'var(--red)'}">${(S._priv && privExp)?fmt(bal):'••••••'}</div></div>
     </div>
     <div class="card fi fd1"><div class="bheader">
       <span style="font-size:13px;color:var(--t3)">Budget mensuel : ${bgt>0?fmt(bgt):'Non défini'}</span>
