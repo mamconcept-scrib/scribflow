@@ -290,7 +290,9 @@ svg text{font-family:var(--fb)}
   </button>
   <div id="voice-status" style="display:none;font-size:13px;padding:12px 16px;border-radius:10px;background:rgba(239,71,111,0.15);border:1px solid rgba(239,71,111,0.3);color:var(--red);font-weight:600;text-align:center;margin-bottom:8px"></div>
   
-  <input id="el" placeholder="Libellé (ex: Carrefour, Uber, Pharmacie...)" oninput="autoCat(this.value)" style="margin-bottom:8px">
+  <input id="el" placeholder="Libellé (ex: Courses, Repas, Plein...)" oninput="autoCat(this.value)" style="margin-bottom:8px">
+  <input id="ev" placeholder="Enseigne (ex: Carrefour, Total, Thiriet...)" list="vendor-suggestions" autocomplete="off" style="margin-bottom:8px">
+  <datalist id="vendor-suggestions"></datalist>
   <div id="ai-badge" style="display:none;font-size:11px;padding:6px 12px;border-radius:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:var(--t3);align-items:center;gap:6px;margin-bottom:8px"></div>
   <input id="ea" placeholder="Montant (€)" type="number" step="0.01" style="margin-bottom:8px">
   <select id="ec" style="margin-bottom:8px"></select>
@@ -304,11 +306,13 @@ svg text{font-family:var(--fb)}
   
   <!-- Bouton dictée gros et explicite (cohérent avec dépenses et bons) -->
   <button type="button" onclick="startVoiceFor('il','ia')" style="width:100%;background:var(--blue);color:#fff;margin-bottom:10px;font-size:13px;padding:10px;border-radius:var(--rs);border:none;font-weight:700;font-family:var(--fb);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:all .15s">
-    🎤 Dictée : "libellé, prix"
+    🎤 Dictée : "libellé, prix, [source]"
   </button>
   <div class="voice-status-generic" data-for="il" style="display:none;margin-bottom:8px"></div>
   
-  <input id="il" placeholder="Libellé (ex: Airbnb, Vinted, Prime...)" style="margin-bottom:8px">
+  <input id="il" placeholder="Libellé (ex: Salaire, Vente, Prime...)" style="margin-bottom:8px">
+  <input id="iv" placeholder="Source/Débiteur (ex: CHU, Airbnb, Vinted...)" list="source-suggestions" autocomplete="off" style="margin-bottom:8px">
+  <datalist id="source-suggestions"></datalist>
   <input id="ia" placeholder="Montant (€)" type="number" step="0.01" style="margin-bottom:8px">
   <input id="id2" type="date" style="margin-bottom:10px">
   <button class="btn bg" onclick="addInc()" style="width:100%">Ajouter</button>
@@ -1036,7 +1040,9 @@ function parseVoiceInput(text) {
   
   // Étape 4 : Catégorisation intelligente
   let categoryFound = false;
-  pendingVendor = ''; // Reset
+  pendingVendor = ''; // Reset (pour rétrocompat)
+  // Reset le champ enseigne au cas où
+  if($('ev')) $('ev').value = '';
   if (suggestion) {
     const cats = CATS[S.mode];
     const matchCatIdx = cats.findIndex(c => 
@@ -1047,9 +1053,11 @@ function parseVoiceInput(text) {
       categoryFound = true;
     } else {
       // La suggestion N'EST PAS une catégorie → c'est une enseigne
-      // On la stocke dans pendingVendor pour qu'elle soit sauvegardée par addExp
       // Capitaliser proprement
-      pendingVendor = suggestion.charAt(0).toUpperCase() + suggestion.slice(1);
+      const capitalizedVendor = suggestion.charAt(0).toUpperCase() + suggestion.slice(1);
+      pendingVendor = capitalizedVendor; // Pour rétrocompat
+      // Remplir le champ visible (Solution 1+3) — utilisateur peut corriger
+      if($('ev')) $('ev').value = capitalizedVendor;
     }
   }
   
@@ -1118,12 +1126,19 @@ function startVoiceFor(labelId, amountId) {
       // Trigger auto-categorization if it's the expense field
       if(labelId === 'el' && parsed.label) autoCat(parsed.label);
       
+      // Pour les revenus : remplir le champ source si suggestion détectée
+      if(labelId === 'il' && parsed.suggestion){
+        const capitalizedSource = parsed.suggestion.charAt(0).toUpperCase() + parsed.suggestion.slice(1);
+        if($('iv')) $('iv').value = capitalizedSource;
+      }
+      
       // Trigger installment preview if applicable
       if(amountId === 'inta') calcInstPreview();
       
       const parts = [];
       if(parsed.label) parts.push(`"${parsed.label}"`);
       if(parsed.amount) parts.push(fmt(parsed.amount));
+      if(parsed.suggestion && labelId === 'il') parts.push(`📍 ${parsed.suggestion}`);
       if(statusEl){statusEl.textContent=`✅ ${parts.join(' — ') || transcript}`;statusEl.classList.remove('listening-active');}
       
       // Force stop
@@ -2298,7 +2313,7 @@ function updateSearch(val){
       html+=allTx.map(t=>{
         const badge=t.src==='rec'?'<span class="txbadge" style="background:rgba(17,138,178,.2);color:var(--blue)">RÉCURRENT</span>':t.src==='inst'?'<span class="txbadge" style="background:rgba(244,132,95,.2);color:var(--orange)">ÉCHÉANCIER</span>':'';
         if(t._type==='inc'){
-          return `<div class="txrow txi"><span style="font-size:16px">💵</span><span class="txl">${t.l} ${badge}</span><span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--green)">${S._priv?'+'+fmt(t.a):'••••••'}</span>${t.id&&S._priv?`<button class="bgh" onclick="editInc('${t.id}')">✏️</button><button class="bgh" onclick="rinc('${t.id}')">✕</button>`:''}</div>`;
+          return `<div class="txrow txi"><span style="font-size:16px">💵</span><span class="txl">${t.l}${t.source?` <span style="color:var(--t4);font-size:11px">📍${t.source}</span>`:''} ${badge}</span><span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--green)">${S._priv?'+'+fmt(t.a):'••••••'}</span>${t.id&&S._priv?`<button class="bgh" onclick="editInc('${t.id}')">✏️</button><button class="bgh" onclick="rinc('${t.id}')">✕</button>`:''}</div>`;
         } else {
           return `<div class="txrow ${t.src==='rec'?'txr':t.src==='inst'?'txs':'txe'}"><span style="font-size:16px">${cats[t.ci]?.i||'📦'}</span><span class="txl">${t.l}${t.vendor?` <span style="color:var(--t4);font-size:11px">📍${t.vendor}</span>`:''} ${badge}</span><span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--red)">-${fmt(t.a)}</span>${t.id?`<button class="bgh" onclick="editExp('${t.id}')">✏️</button><button class="bgh" onclick="rtx('${t.id}')">✕</button>`:''}</div>`;
         }
@@ -2624,7 +2639,7 @@ function getSmartSummary(){
   return lines;
 }
 
-// Variable temporaire pour stocker l'enseigne dictée entre parseVoice et addExp
+// Variable temporaire pour stocker l'enseigne dictée entre parseVoice et addExp (rétrocompat)
 let pendingVendor = '';
 
 function addExp(){
@@ -2634,12 +2649,17 @@ function addExp(){
     ? now.toISOString().slice(0,10)
     : `${S.yr}-${String(S.mo+1).padStart(2,'0')}-${String(dim(S.yr,S.mo)).padStart(2,'0')}`;
   const l=$('el').value.trim(),a=parseFloat($('ea').value),c=parseInt($('ec').value),d=$('ed').value||fallbackDate;
-  const vendor = pendingVendor; // Récupérer l'enseigne dictée
+  // Lire l'enseigne directement du champ visible (peut avoir été modifiée par l'user)
+  const vendor = ($('ev')?.value || '').trim();
   if(!l||!a)return;
   const isEdit = !!editingExpId;
   if (editingExpId) {
     const tx = S.tx.find(t=>t.id===editingExpId);
-    if(tx){ tx.l=l; tx.a=a; tx.ci=c; tx.d=d; if(vendor) tx.vendor=vendor; }
+    if(tx){ 
+      tx.l=l; tx.a=a; tx.ci=c; tx.d=d; 
+      if(vendor) tx.vendor = vendor;
+      else delete tx.vendor; // Si vidé en édition, supprimer le champ
+    }
     editingExpId = null;
   } else {
     const newTx = {id:gid(),l,a,ci:c,d,m:S.mode,ts:Date.now()};
@@ -2648,7 +2668,9 @@ function addExp(){
   }
   const cat=CATS[S.mode][c];
   pendingVendor = ''; // Reset après usage
-  sv();cm('m-exp');hideBadge();R();$('el').value='';$('ea').value='';$('ed').value='';$('ec').value='0';
+  sv();cm('m-exp');hideBadge();R();
+  $('el').value='';$('ea').value='';$('ed').value='';$('ec').value='0';
+  if($('ev')) $('ev').value=''; // Reset champ enseigne
   const vs=$('voice-status');if(vs)vs.style.display='none';
   $('m-exp').querySelector('.mt').textContent='Nouvelle dépense';
   const vendorInfo = vendor ? ` 📍 ${vendor}` : '';
@@ -2661,19 +2683,29 @@ function addInc(){
     ? now.toISOString().slice(0,10)
     : `${S.yr}-${String(S.mo+1).padStart(2,'0')}-${String(dim(S.yr,S.mo)).padStart(2,'0')}`;
   const l=$('il').value.trim(),a=parseFloat($('ia').value),d=$('id2').value||fallbackDate;
+  // Lire la source/débiteur du champ visible
+  const source = ($('iv')?.value || '').trim();
   if(!l||!a)return;
   const isEdit = !!editingIncId;
   if (editingIncId) {
     const inc = S.inc.find(t=>t.id===editingIncId);
-    if(inc){ inc.l=l; inc.a=a; inc.d=d; }
+    if(inc){ 
+      inc.l=l; inc.a=a; inc.d=d; 
+      if(source) inc.source = source;
+      else delete inc.source;
+    }
     editingIncId = null;
   } else {
-    S.inc.push({id:gid(),l,a,d,m:S.mode,ts:Date.now()});
+    const newInc = {id:gid(),l,a,d,m:S.mode,ts:Date.now()};
+    if(source) newInc.source = source;
+    S.inc.push(newInc);
   }
   sv();cm('m-inc');R();$('il').value='';$('ia').value='';$('id2').value='';
+  if($('iv')) $('iv').value=''; // Reset champ source
   const vs2=document.querySelector('.voice-status-generic[data-for="il"]');if(vs2)vs2.style.display='none';
   $('m-inc').querySelector('.mt').textContent='Nouveau revenu';
-  showToast(isEdit?`✏️ Revenu modifié : ${l} — ${fmt(a)}`:`✅ Revenu ajouté : ${l} — +${fmt(a)}`);
+  const sourceInfo = source ? ` 📍 ${source}` : '';
+  showToast(isEdit?`✏️ Revenu modifié : ${l} — ${fmt(a)}${sourceInfo}`:`✅ Revenu ajouté : ${l} — +${fmt(a)}${sourceInfo}`);
 }
 function editExp(id){
   const tx = S.tx.find(t=>t.id===id);
@@ -2682,6 +2714,7 @@ function editExp(id){
   $('el').value = tx.l;
   $('ea').value = tx.a;
   $('ed').value = tx.d;
+  if($('ev')) $('ev').value = tx.vendor || ''; // Pré-remplir enseigne
   om('m-exp');
   // Wait for modal to open then set category
   setTimeout(()=>{ $('ec').value = tx.ci; autoCat(tx.l); }, 50);
@@ -2699,6 +2732,7 @@ function editInc(id){
   $('il').value = inc.l;
   $('ia').value = inc.a;
   $('id2').value = inc.d;
+  if($('iv')) $('iv').value = inc.source || ''; // Pré-remplir source
   om('m-inc');
   $('m-inc').querySelector('.mt').textContent='✏️ Modifier le revenu';
 }
@@ -2961,7 +2995,36 @@ function R(){
   // Filtrer les catégories masquées pour les sélecteurs (mais garder l'index original)
   const visibleCats = cats.map((c,i)=>({...c,_idx:i})).filter(c=>!c.hidden);
   $('ec').innerHTML=visibleCats.map(c=>`<option value="${c._idx}">${c.i} ${c.n}</option>`).join('');
+  updateVendorSuggestions(); // Peupler les datalists d'auto-suggestion
   if(S.tab==='budget')RB(cats);else RH(cats);
+}
+
+// Peuple les datalists des champs Enseigne (dépenses) et Source (revenus)
+// avec les valeurs uniques déjà utilisées dans l'historique
+function updateVendorSuggestions(){
+  // Vendors uniques depuis les transactions du mode actuel
+  const vendors = [...new Set(
+    S.tx
+      .filter(t => t.m === S.mode && t.vendor)
+      .map(t => t.vendor)
+  )].sort((a,b) => a.localeCompare(b,'fr'));
+  
+  const vendorList = $('vendor-suggestions');
+  if(vendorList){
+    vendorList.innerHTML = vendors.map(v => `<option value="${v.replace(/"/g,'&quot;')}">`).join('');
+  }
+  
+  // Sources uniques depuis les revenus du mode actuel
+  const sources = [...new Set(
+    S.inc
+      .filter(t => t.m === S.mode && t.source)
+      .map(t => t.source)
+  )].sort((a,b) => a.localeCompare(b,'fr'));
+  
+  const sourceList = $('source-suggestions');
+  if(sourceList){
+    sourceList.innerHTML = sources.map(s => `<option value="${s.replace(/"/g,'&quot;')}">`).join('');
+  }
 }
 
 function rHead(){
@@ -3229,7 +3292,7 @@ function RB(cats){
           const badge=t.src==='rec'?'<span class="txbadge" style="background:rgba(17,138,178,.2);color:var(--blue)">RÉCURRENT</span>'
             :t.src==='inst'?'<span class="txbadge" style="background:rgba(244,132,95,.2);color:var(--orange)">ÉCHÉANCIER</span>':'';
           if(t._type==='inc'){
-            return `<div class="txrow txi"><span style="font-size:16px">💵</span><span class="txl">${t.l} ${badge}</span>
+            return `<div class="txrow txi"><span style="font-size:16px">💵</span><span class="txl">${t.l}${t.source?` <span style="color:var(--t4);font-size:11px">📍${t.source}</span>`:''} ${badge}</span>
             <span class="txd">${fmtDateFR(t.d)}</span><span class="txa" style="color:var(--green)">${S._priv?'+'+fmt(t.a):'••••••'}</span>
             ${t.id&&S._priv?`<button class="bgh" onclick="editInc('${t.id}')" title="Modifier">✏️</button><button class="bgh" onclick="rinc('${t.id}')">✕</button>`:''}</div>`;
           } else {
