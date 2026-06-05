@@ -10,6 +10,51 @@
 <link rel="manifest" href="/scribflow/manifest.json">
 <link rel="apple-touch-icon" href="/scribflow/apple-touch-icon.png">
 <title>SCRIB FLOW Démo — Control your financial flow</title>
+<!-- Reset code display modal (shown ONCE after PIN+SQ creation) -->
+<div id="pin-reset-code" style="display:none;position:fixed;inset:0;z-index:100000;background:#000;flex-direction:column;align-items:center;justify-content:center;padding:20px">
+  <div style="max-width:380px;width:100%">
+    <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:6px;font-family:var(--fb);text-align:center">🔑 Code de reset ultime</div>
+    <div style="font-size:13px;color:var(--yellow);margin-bottom:20px;font-family:var(--fb);text-align:center;font-weight:600">⚠️ Ne s'affichera qu'UNE SEULE fois</div>
+    
+    <div style="background:rgba(255,255,255,0.04);border:2px solid var(--yellow);border-radius:14px;padding:20px;margin-bottom:16px;text-align:center">
+      <div id="reset-code-display" style="font-family:var(--fd);font-size:22px;color:#fff;font-weight:700;letter-spacing:1px;line-height:1.4;word-break:break-all"></div>
+    </div>
+    
+    <div style="background:rgba(239,71,111,0.08);border:1px solid rgba(239,71,111,0.2);border-radius:10px;padding:12px;margin-bottom:16px">
+      <div style="font-size:12px;color:var(--red);font-weight:600;margin-bottom:6px">⚠️ Important :</div>
+      <div style="font-size:13px;color:var(--t2);line-height:1.6">
+        Notez ce code et conservez-le en lieu sûr. Si vous oubliez votre PIN <strong>ET</strong> votre question secrète, ce code permettra de <strong>réinitialiser complètement l'application</strong> (toutes vos données seront perdues).
+      </div>
+    </div>
+    
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button onclick="copyResetCode()" style="flex:1;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.06);color:#fff;font-size:13px;cursor:pointer;font-family:var(--fb);font-weight:600">📋 Copier</button>
+    </div>
+    
+    <button onclick="confirmResetCodeNoted()" style="width:100%;padding:14px;border-radius:10px;border:none;background:var(--green);color:#fff;font-size:15px;cursor:pointer;font-family:var(--fb);font-weight:600">✓ Je l'ai noté précieusement</button>
+    <div id="reset-code-feedback" style="font-size:12px;color:var(--green);text-align:center;margin-top:8px;height:16px"></div>
+  </div>
+</div>
+
+<!-- Reset code recovery (saisie pour reset) -->
+<div id="pin-reset-recovery" style="display:none;position:fixed;inset:0;z-index:100000;background:#000;flex-direction:column;align-items:center;justify-content:center;padding:20px">
+  <div style="max-width:340px;width:100%">
+    <div style="font-size:18px;font-weight:700;color:#fff;margin-bottom:6px;font-family:var(--fb);text-align:center">🔑 Reset ultime</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:20px;font-family:var(--fb);text-align:center">Entrez votre code de reset</div>
+    <input id="reset-code-input" placeholder="ex: chat-rouge-soleil-7" style="width:100%;padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.12);background:rgba(255,255,255,0.06);color:#fff;font-size:14px;font-family:var(--fd);text-align:center;outline:none;margin-bottom:12px;letter-spacing:0.5px" autocapitalize="none" autocomplete="off">
+    
+    <div style="background:rgba(239,71,111,0.08);border:1px solid rgba(239,71,111,0.2);border-radius:10px;padding:10px;margin-bottom:16px">
+      <div style="font-size:12px;color:var(--red);line-height:1.5;text-align:center">
+        ⚠️ Attention : Ce code va <strong>EFFACER toutes vos données</strong>. Action irréversible.
+      </div>
+    </div>
+    
+    <button onclick="verifyResetCode()" style="width:100%;padding:14px;border-radius:10px;border:none;background:var(--red);color:#fff;font-size:15px;cursor:pointer;font-family:var(--fb);font-weight:600;margin-bottom:8px">Réinitialiser l'app</button>
+    <div id="reset-code-error" style="font-size:12px;color:var(--red);text-align:center;margin-top:8px;margin-bottom:8px;height:16px"></div>
+    <button onclick="hideResetRecovery()" style="background:none;border:none;color:rgba(255,255,255,0.3);padding:8px;font-size:12px;cursor:pointer;font-family:var(--fb);width:100%">Retour</button>
+  </div>
+</div>
+
 <style>
 :root {
   --warm:#E8A87C; --purple:#C9B1FF; --green:#06D6A0; --red:#EF476F; --yellow:#FFD166; --blue:#118AB2;
@@ -239,6 +284,7 @@ svg text{font-family:var(--fb)}
     <button id="lock-cancel-btn" onclick="cancelPinUnlock()" style="display:none;background:none;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.4);padding:8px 16px;border-radius:8px;font-size:12px;cursor:pointer;font-family:var(--fb)">Annuler</button>
   </div>
   <button id="lock-forgot-btn" onclick="showForgotPin()" style="display:none;background:none;border:none;color:rgba(255,255,255,0.3);padding:12px;font-size:12px;cursor:pointer;font-family:var(--fb);margin-top:10px">Code oublié ?</button>
+  <button id="lock-reset-ultimate-btn" onclick="showResetRecovery()" style="display:none;background:none;border:none;color:rgba(239,71,111,0.5);padding:8px;font-size:11px;cursor:pointer;font-family:var(--fb);margin-top:2px">🔑 J'ai oublié tout — Reset ultime</button>
   
   <!-- Secret question recovery -->
   <div id="pin-recovery" style="display:none;width:300px;margin-top:20px">
@@ -434,6 +480,29 @@ svg text{font-family:var(--fb)}
     <div style="display:flex;gap:10px;margin-top:8px">
       <button class="btn" style="flex:1;background:rgba(255,255,255,0.08);color:var(--t2)" onclick="cm('m-confirm')">Annuler</button>
       <button class="btn" id="confirm-btn" style="flex:1;background:var(--red);color:#fff" onclick="execConfirm()">Supprimer</button>
+    </div>
+  </div>
+</div></div>
+
+<!-- Modal éducatif : PIN nécessaire pour cacher revenus -->
+<div class="mo" id="m-pin-required"><div class="md" style="max-width:380px">
+  <div class="mh"><span class="mt">🔒 Code PIN requis</span><button class="mc" onclick="cm('m-pin-required')">✕</button></div>
+  <div class="mf">
+    <p style="font-size:14px;color:var(--t2);line-height:1.6;margin-bottom:14px">
+      Pour <strong style="color:var(--t1)">cacher vos revenus</strong>, vous devez d'abord créer un code PIN.
+    </p>
+    <div style="background:rgba(78,205,196,0.08);border:1px solid rgba(78,205,196,0.2);border-radius:10px;padding:12px;margin-bottom:16px">
+      <div style="font-size:12px;color:var(--green);font-weight:600;margin-bottom:6px">Ce code sera demandé pour :</div>
+      <div style="font-size:13px;color:var(--t2);line-height:1.7">
+        • Afficher vos revenus à nouveau<br>
+        • Réinitialiser l'application<br>
+        • Importer des données<br>
+        • Supprimer un revenu
+      </div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button class="btn" style="flex:1;background:rgba(255,255,255,0.08);color:var(--t2)" onclick="cm('m-pin-required')">Plus tard</button>
+      <button class="btn bp" style="flex:1.5" onclick="cm('m-pin-required');setTimeout(()=>{startPinSetupForPrivacy()},250)">Créer mon code</button>
     </div>
   </div>
 </div></div>
@@ -930,72 +999,114 @@ function parseVoiceInput(text) {
   // Étape 1 : Extraire le prix
   let amount = null;
   
-  // Pattern avec euros et centimes : "X euros Y centimes"
-  const euroCentMatch = processed.match(/(\d+[\s,.]?\d*)\s*euros?\s+(\d{1,2})\s*(centimes?|cents?)?/i);
+  // Dictionnaire des nombres en lettres
+  const numWords = {
+    'zéro':0,'zero':0,
+    'un':1,'une':1,'deux':2,'trois':3,'quatre':4,'cinq':5,'six':6,'sept':7,'huit':8,'neuf':9,
+    'dix':10,'onze':11,'douze':12,'treize':13,'quatorze':14,'quinze':15,'seize':16,
+    'dix-sept':17,'dix-huit':18,'dix-neuf':19,
+    'vingt':20,'trente':30,'quarante':40,'cinquante':50,'soixante':60,
+    'cent':100,'cents':100,'mille':1000,
+  };
+  
+  // Convertit une suite de mots-nombres en valeur numérique
+  function wordsToNumber(numText){
+    numText = numText.trim();
+    if(!numText) return null;
+    
+    // Cas spéciaux composés
+    if(/quatre[\s-]vingt[\s-]dix/i.test(numText)){
+      let total = 90;
+      const after = numText.replace(/quatre[\s-]vingt[\s-]dix[\s-]*/i,'').trim();
+      if(after && numWords[after]!==undefined) total += numWords[after];
+      return total;
+    }
+    if(/quatre[\s-]vingt/i.test(numText)){
+      let total = 80;
+      const after = numText.replace(/quatre[\s-]vingts?[\s-]*/i,'').trim();
+      if(after && numWords[after]!==undefined) total += numWords[after];
+      return total;
+    }
+    if(/soixante[\s-]dix/i.test(numText)){
+      let total = 70;
+      const after = numText.replace(/soixante[\s-]dix[\s-]*/i,'').trim();
+      if(after && numWords[after]!==undefined) total += numWords[after];
+      return total;
+    }
+    
+    // Cas général : additionner les mots-nombres
+    const words = numText.split(/[\s-]+/);
+    let total = 0, current = 0, found = false;
+    for(const w of words){
+      if(numWords[w] !== undefined){
+        found = true;
+        const v = numWords[w];
+        if(v === 100) current = current === 0 ? 100 : current * 100;
+        else if(v === 1000){ current = current === 0 ? 1000 : current * 1000; total += current; current = 0; }
+        else current += v;
+      }
+    }
+    total += current;
+    return found && total > 0 ? total : null;
+  }
+  
+  // PRIORITÉ 1 : "X euros Y centimes" ou "X euros Y" (chiffres)
+  const euroCentMatch = processed.match(/(\d+)[\s]*euros?[\s]+(\d{1,2})\s*(centimes?|cents?)?\b/i);
   if (euroCentMatch) {
-    amount = parseFloat(euroCentMatch[1].replace(/[\s,]/g, '.')) + parseFloat(euroCentMatch[2]) / 100;
+    amount = parseFloat(euroCentMatch[1]) + parseFloat(euroCentMatch[2]) / 100;
     processed = processed.replace(euroCentMatch[0], '|PRIX|');
   }
   
-  if (!amount) {
-    // Pattern: "X,YY euros" ou "X.YY euros" ou "X euros" ou "X €" ou "X e"
-    const euroMatch = processed.match(/(\d+(?:[,.\s]\d+)?)\s*(?:euros?|€|e\b)/i);
+  // PRIORITÉ 2 : "X,YY" ou "X.YY euros" ou "X euros" ou "X €" (chiffres)
+  if (amount === null) {
+    const euroMatch = processed.match(/(\d+(?:[,.]\d+)?)\s*(?:euros?|€|balles?|e\b)/i);
     if (euroMatch) {
-      const numStr = euroMatch[1].replace(/[\s]/g, '').replace(',', '.');
-      amount = parseFloat(numStr);
+      amount = parseFloat(euroMatch[1].replace(',', '.'));
       processed = processed.replace(euroMatch[0], '|PRIX|');
     }
   }
   
-  // Pattern nombres en lettres
-  if (!amount) {
-    const numWords = {
-      'un':1,'deux':2,'trois':3,'quatre':4,'cinq':5,'six':6,'sept':7,'huit':8,'neuf':9,
-      'dix':10,'onze':11,'douze':12,'treize':13,'quatorze':14,'quinze':15,'seize':16,
-      'vingt':20,'trente':30,'quarante':40,'cinquante':50,'soixante':60,
-      'cent':100,'cents':100,'mille':1000,
-    };
-    
-    const spokenEuroMatch = processed.match(/([\w\s-]+?)\s*euros?/i);
-    if (spokenEuroMatch) {
-      const numText = spokenEuroMatch[1].trim();
-      const words = numText.split(/[\s-]+/);
-      let total = 0, current = 0, found = false;
-      
-      for (const w of words) {
-        if (numWords[w] !== undefined) {
-          found = true;
-          const v = numWords[w];
-          if (v === 100) current = current === 0 ? 100 : current * 100;
-          else if (v === 1000) { current = current === 0 ? 1000 : current * 1000; total += current; current = 0; }
-          else current += v;
-        }
+  // PRIORITÉ 3 : chiffres seuls suivis d'un mot (ex: "20 carrefour" sans "euros")
+  // Seulement si pas encore de montant ET le chiffre est isolé
+  if (amount === null) {
+    const bareNum = processed.match(/(?:^|[\s,])(\d+(?:[,.]\d+)?)(?:[\s,]|$)/);
+    if (bareNum) {
+      amount = parseFloat(bareNum[1].replace(',', '.'));
+      processed = processed.replace(bareNum[1], '|PRIX|');
+    }
+  }
+  
+  // PRIORITÉ 4 : nombres en lettres suivis de "euros"
+  // On cherche UNIQUEMENT les mots-nombres juste avant "euros"
+  if (amount === null) {
+    const spokenMatch = processed.match(/((?:zéro|zero|un|une|deux|trois|quatre|cinq|six|sept|huit|neuf|dix|onze|douze|treize|quatorze|quinze|seize|vingt|trente|quarante|cinquante|soixante|cent|cents|mille|[\s-])+)\s*euros?\b/i);
+    if (spokenMatch) {
+      const val = wordsToNumber(spokenMatch[1].trim());
+      if (val !== null) {
+        amount = val;
+        processed = processed.replace(spokenMatch[0], '|PRIX|');
       }
-      total += current;
-      
-      if (!found || total === 0) {
-        if (/quatre[\s-]vingt/i.test(numText)) {
-          total = 80;
-          const after = numText.replace(/quatre[\s-]vingts?[\s-]*/i, '').trim();
-          if (after && numWords[after]) total += numWords[after];
-          if (/dix/i.test(after)) {
-            total = 90;
-            const after2 = after.replace(/dix[\s-]*/i, '').trim();
-            if (after2 && numWords[after2]) total += numWords[after2];
-          }
-          found = true;
+    }
+  }
+  
+  // PRIORITÉ 5 : nombres en lettres SANS "euros" (dernier recours)
+  if (amount === null) {
+    const words = processed.split(/[\s,]+/);
+    for (let i = 0; i < words.length; i++) {
+      if (numWords[words[i]] !== undefined) {
+        // Tenter de capturer une séquence de mots-nombres
+        let j = i;
+        const seq = [];
+        while (j < words.length && (numWords[words[j]] !== undefined || ['quatre','vingt','vingts','dix','cent','cents','mille'].includes(words[j]))) {
+          seq.push(words[j]);
+          j++;
         }
-        if (/soixante[\s-]dix/i.test(numText)) {
-          total = 70;
-          const after = numText.replace(/soixante[\s-]dix[\s-]*/i, '').trim();
-          if (after && numWords[after]) total += numWords[after];
-          found = true;
+        const val = wordsToNumber(seq.join(' '));
+        if (val !== null) {
+          amount = val;
+          processed = processed.replace(seq.join(' '), '|PRIX|');
+          break;
         }
-      }
-      
-      if (found && total > 0) {
-        amount = total;
-        processed = processed.replace(spokenEuroMatch[0], '|PRIX|');
       }
     }
   }
@@ -1012,37 +1123,38 @@ function parseVoiceInput(text) {
     label = processed.trim();
   }
   
-  // Nettoyer
+  // Nettoyer le libellé
   label = label
     .replace(/[,;.]\s*$/g, '')
+    .replace(/^[,;.\s]+/g, '')
     .replace(/\s+/g, ' ')
-    .replace(/^\s*(pour|chez|à|au|aux|en|de|du|des|le|la|les|un|une)\s+/i, '')
+    .replace(/^\s*(pour|chez|à|au|aux|en|de|du|des|le|la|les)\s+/i, '')
     .trim();
   
+  // Nettoyer la suggestion
   suggestion = suggestion
     .replace(/^\s*[,;.]\s*/g, '')
     .replace(/[,;.]\s*$/g, '')
     .replace(/\s+/g, ' ')
-    .replace(/^\s*(pour|chez|à|au|aux|en|de|du|des|le|la|les|un|une)\s+/i, '')
+    .replace(/^\s*(pour|chez|à|au|aux|en|de|du|des|le|la|les)\s+/i, '')
     .trim();
   
-  // Capitaliser
+  // Capitaliser le libellé
   if (label.length > 0) {
     label = label.charAt(0).toUpperCase() + label.slice(1);
   }
   
-  // Étape 3 : Appliquer
+  // Étape 3 : Appliquer les résultats aux champs
   if (label) {
     $('el').value = label;
   }
-  if (amount && !isNaN(amount) && amount > 0) {
+  if (amount !== null && !isNaN(amount) && amount > 0) {
     $('ea').value = Math.round(amount * 100) / 100;
   }
   
   // Étape 4 : Catégorisation intelligente
   let categoryFound = false;
-  pendingVendor = ''; // Reset (pour rétrocompat)
-  // Reset le champ enseigne au cas où
+  pendingVendor = '';
   if($('ev')) $('ev').value = '';
   if (suggestion) {
     const cats = CATS[S.mode];
@@ -1050,31 +1162,36 @@ function parseVoiceInput(text) {
       c.n.toLowerCase() === suggestion.toLowerCase() && !c.hidden
     );
     if (matchCatIdx >= 0) {
+      // La suggestion est une catégorie existante
       $('ec').value = matchCatIdx;
       categoryFound = true;
     } else {
-      // La suggestion N'EST PAS une catégorie → c'est une enseigne
-      // Capitaliser proprement
+      // La suggestion est une enseigne → remplir le champ Enseigne
       const capitalizedVendor = suggestion.charAt(0).toUpperCase() + suggestion.slice(1);
-      pendingVendor = capitalizedVendor; // Pour rétrocompat
-      // Remplir le champ visible (Solution 1+3) — utilisateur peut corriger
+      pendingVendor = capitalizedVendor;
       if($('ev')) $('ev').value = capitalizedVendor;
     }
   }
   
-  // Si pas de catégorie explicite, autoCat sur libellé + suggestion combinés
+  // Si pas de catégorie explicite, autoCat sur libellé + enseigne combinés
   if (!categoryFound && label) {
-    const textForCat = suggestion ? `${label} ${suggestion}` : label;
+    const textForCat = suggestion && !categoryFound ? `${label} ${suggestion}` : label;
     autoCat(textForCat);
   }
   
-  // Étape 5 : Feedback
+  // Étape 5 : Feedback visuel
   const feedbackParts = [];
   if (label) feedbackParts.push(`"${label}"`);
-  if (amount) feedbackParts.push(fmt(amount));
+  if (amount !== null && amount > 0) feedbackParts.push(fmt(amount));
   if (suggestion && !categoryFound) feedbackParts.push(`📍 ${suggestion}`);
   if (categoryFound) feedbackParts.push(`✓ ${suggestion}`);
-  showVoiceStatus(`✅ Compris : ${feedbackParts.join(' — ') || original}`, false);
+  
+  // Message d'avertissement si le montant n'a pas été compris
+  if (amount === null) {
+    showVoiceStatus(`⚠️ Compris : ${feedbackParts.join(' — ')} — Montant non détecté, ajoutez-le manuellement`, false);
+  } else {
+    showVoiceStatus(`✅ Compris : ${feedbackParts.join(' — ') || original}`, false);
+  }
   
   // Force stop microphone
   if (recognition) {
@@ -1352,6 +1469,7 @@ function toggleExpPrivacy(){
 // Si pas de PIN configuré → exécute directement
 // Usage: requirePinThen('Confirmer suppression du revenu', () => { ... })
 let pendingPinCallback = null; // callback à exécuter quand PIN OK
+let pendingPinSetupAction = null; // 'hide_revenues' si on a créé le PIN pour cacher les revenus
 
 function requirePinThen(title, callback){
   if(!getPIN()){
@@ -1390,10 +1508,18 @@ function requirePinThen(title, callback){
 
 function togglePrivacy(){
   if(S._priv){
-    S._priv=false;sv();R();
-  } else {
+    // Revenus actuellement VISIBLES → on veut les cacher
     if(getPIN()){
-      // Utiliser le helper standardisé
+      // PIN existe → on cache directement
+      S._priv=false;sv();R();
+    } else {
+      // Pas de PIN → modal éducatif (Option B : PIN obligatoire pour cacher)
+      om('m-pin-required');
+    }
+  } else {
+    // Revenus actuellement CACHÉS → on veut les afficher
+    if(getPIN()){
+      // PIN existe → demander le code
       requirePinThen('Entrez votre code pour afficher les revenus', ()=>{
         S._priv=true;
         sv();
@@ -1401,12 +1527,39 @@ function togglePrivacy(){
       });
       // Pour togglePrivacy, on affiche aussi le bouton "Code oublié"
       if(getSQ()){
-        setTimeout(()=>{ $('lock-forgot-btn').style.display='inline-block'; }, 150);
+        $('lock-forgot-btn').style.display='inline-block';
       }
     } else {
+      // Cas impossible normalement (pas de PIN mais revenus cachés)
+      // On débloque par sécurité
       S._priv=true;sv();R();
     }
   }
+}
+
+// Lance la création de PIN spécifiquement pour cacher les revenus
+// Une fois le PIN créé, les revenus seront automatiquement cachés
+function startPinSetupForPrivacy(){
+  // Marquer qu'après la création du PIN, on doit cacher les revenus
+  pendingPinSetupAction = 'hide_revenues';
+  
+  // Ouvrir l'écran de création de PIN
+  const ls=$('lockscreen');
+  ls.style.display='flex';
+  $('app').style.display='none';
+  $('pin-recovery').style.display='none';
+  $('lock-pad').style.display='grid';
+  $('lock-dots').style.display='flex';
+  pinBuffer='';
+  pinFailCount=0;
+  updateDots();
+  $('lock-error').textContent='';
+  $('lock-title').textContent='Créez votre code PIN (4 chiffres)';
+  $('lock-setup-btn').style.display='none';
+  $('lock-disable-btn').style.display='none';
+  $('lock-forgot-btn').style.display='none';
+  $('lock-cancel-btn').style.display='inline-block';
+  pinMode='setup_new';
 }
 function cancelPinUnlock(){
   $('lockscreen').style.display='none';
@@ -1415,6 +1568,7 @@ function cancelPinUnlock(){
   // Restaurer l'état complet
   pinMode='unlock';
   pendingPinCallback=null;
+  pendingPinSetupAction=null; // Annule aussi le setup de privacy
   pinBuffer='';
 }
 
@@ -1853,15 +2007,10 @@ function om(id){
   // Reset fields when opening financial modals (not when editing)
   // Date par défaut : aujourd'hui si mois en cours, sinon dernier jour du mois affiché
   function getDefaultDate(){
-    const now=new Date();
-    if(S.yr===now.getFullYear() && S.mo===now.getMonth()){
-      return now.toISOString().slice(0,10); // Aujourd'hui
-    }
-    // Dernier jour du mois affiché
-    const lastDay=dim(S.yr,S.mo);
-    const m=String(S.mo+1).padStart(2,'0');
-    const d=String(lastDay).padStart(2,'0');
-    return `${S.yr}-${m}-${d}`;
+    // Toujours aujourd'hui, peu importe le mois navigué
+    // Évite les confusions du genre "ma dépense apparaît au 30 du mois"
+    // Si l'utilisateur veut une autre date, il la modifie manuellement
+    return new Date().toISOString().slice(0,10);
   }
   if(id==='m-exp' && !editingExpId){
     $('el').value='';$('ea').value='';$('ed').value=getDefaultDate();
@@ -2648,11 +2797,8 @@ function getSmartSummary(){
 let pendingVendor = '';
 
 function addExp(){
-  // Date par défaut intelligente selon le mois affiché
-  const now=new Date();
-  const fallbackDate = (S.yr===now.getFullYear() && S.mo===now.getMonth())
-    ? now.toISOString().slice(0,10)
-    : `${S.yr}-${String(S.mo+1).padStart(2,'0')}-${String(dim(S.yr,S.mo)).padStart(2,'0')}`;
+  // Date par défaut = aujourd'hui (cohérent avec getDefaultDate)
+  const fallbackDate = new Date().toISOString().slice(0,10);
   const l=$('el').value.trim(),a=parseFloat($('ea').value),c=parseInt($('ec').value),d=$('ed').value||fallbackDate;
   // Lire l'enseigne directement du champ visible (peut avoir été modifiée par l'user)
   const vendor = ($('ev')?.value || '').trim();
@@ -2682,11 +2828,8 @@ function addExp(){
   showToast(isEdit?`✏️ Dépense modifiée : ${l} — ${fmt(a)}${vendorInfo}`:`✅ Dépense ajoutée : ${l} — ${fmt(a)} (${cat?.i} ${cat?.n})${vendorInfo}`);
 }
 function addInc(){
-  // Date par défaut intelligente selon le mois affiché
-  const now=new Date();
-  const fallbackDate = (S.yr===now.getFullYear() && S.mo===now.getMonth())
-    ? now.toISOString().slice(0,10)
-    : `${S.yr}-${String(S.mo+1).padStart(2,'0')}-${String(dim(S.yr,S.mo)).padStart(2,'0')}`;
+  // Date par défaut = aujourd'hui (cohérent avec getDefaultDate)
+  const fallbackDate = new Date().toISOString().slice(0,10);
   const l=$('il').value.trim(),a=parseFloat($('ia').value),d=$('id2').value||fallbackDate;
   // Lire la source/débiteur du champ visible
   const source = ($('iv')?.value || '').trim();
@@ -3338,6 +3481,7 @@ function showLock(){
   pinFailCount=0;
   updateDots();
   $('lock-error').textContent='';
+  $('lock-reset-ultimate-btn').style.display='none'; // Caché par défaut
   
   const hasPin=!!getPIN();
   if(hasPin){
@@ -3393,6 +3537,10 @@ function checkPin(){
     } else {
       pinFailCount++;
       pinError('Code incorrect'+(pinFailCount>=3?' — Essayez "Code oublié ?"':''));
+      // Afficher aussi le bouton "Reset ultime" en dernier recours
+      if(pinFailCount>=3 && localStorage.getItem('scribflow_reset_hash')){
+        $('lock-reset-ultimate-btn').style.display='inline-block';
+      }
     }
   } else if(pinMode==='action'){
     // Action sensible nécessitant un PIN (Reset, Import, Suppression revenu, etc.)
@@ -3451,8 +3599,126 @@ function saveSecretQuestion(){
   if(!q){$('sq-error').textContent='Choisissez une question';return}
   if(!a){$('sq-error').textContent='Entrez une réponse';return}
   setSQ(q,a);
+  
+  // 🆕 Au lieu d'aller direct à l'app, on affiche le code de reset (UNE fois)
+  showResetCodeScreen();
+}
+
+// ─── Reset code (one-time display) ───
+const RC_WORDS_ANIMALS = ['chat','chien','lion','aigle','tigre','loup','renard','dauphin','panda','koala','ours','zebre','singe','cheval','poisson','oiseau'];
+const RC_WORDS_COLORS = ['rouge','bleu','vert','jaune','noir','blanc','violet','orange','rose','dore','argente','marron','turquoise'];
+const RC_WORDS_NATURE = ['soleil','lune','etoile','ocean','montagne','foret','riviere','arbre','fleur','volcan','desert','plage','glacier','nuage'];
+
+let oneTimeResetCode = null; // Stocké en mémoire pour copie/affichage UNIQUE
+
+function generateResetCode(){
+  const animal = RC_WORDS_ANIMALS[Math.floor(Math.random()*RC_WORDS_ANIMALS.length)];
+  const color = RC_WORDS_COLORS[Math.floor(Math.random()*RC_WORDS_COLORS.length)];
+  const nature = RC_WORDS_NATURE[Math.floor(Math.random()*RC_WORDS_NATURE.length)];
+  const num = Math.floor(Math.random()*9)+1; // 1-9
+  return `${animal}-${color}-${nature}-${num}`;
+}
+
+// Hash simple côté client (suffisant pour usage local, pas un secret bancaire)
+async function hashCode(code){
+  const encoder = new TextEncoder();
+  const data = encoder.encode(code.toLowerCase().trim());
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function showResetCodeScreen(){
+  // Générer le code et le hasher pour stockage
+  oneTimeResetCode = generateResetCode();
+  const hash = await hashCode(oneTimeResetCode);
+  localStorage.setItem('scribflow_reset_hash', hash);
+  
+  // Cacher l'écran question secrète et afficher le code
+  $('pin-sq-setup').style.display='none';
+  $('pin-reset-code').style.display='flex';
+  $('reset-code-display').textContent = oneTimeResetCode;
+  $('reset-code-feedback').textContent = '';
+}
+
+function copyResetCode(){
+  if(!oneTimeResetCode){return}
+  navigator.clipboard.writeText(oneTimeResetCode).then(()=>{
+    $('reset-code-feedback').textContent = '✓ Copié dans le presse-papiers';
+    setTimeout(()=>{ $('reset-code-feedback').textContent = ''; }, 2500);
+  }).catch(()=>{
+    // Fallback si clipboard API indisponible
+    const tmp = document.createElement('textarea');
+    tmp.value = oneTimeResetCode;
+    document.body.appendChild(tmp);
+    tmp.select();
+    try { document.execCommand('copy'); $('reset-code-feedback').textContent = '✓ Copié'; } catch(e) {}
+    document.body.removeChild(tmp);
+  });
+}
+
+function confirmResetCodeNoted(){
+  // Effacer le code de la mémoire (sécurité)
+  oneTimeResetCode = null;
+  $('reset-code-display').textContent = '';
+  $('pin-reset-code').style.display='none';
+  
+  // Continuer le flow normal
   hideLock();
-  showToast('🔒 Code PIN et question secrète activés');
+  
+  // Si on a créé le PIN spécifiquement pour cacher les revenus → cacher maintenant
+  if(pendingPinSetupAction === 'hide_revenues'){
+    pendingPinSetupAction = null;
+    S._priv = false; // false = caché (••••••)
+    sv();
+    R();
+    showToast('🔒 Code PIN activé — Revenus masqués','var(--green)');
+  } else {
+    showToast('🔒 Sécurité activée');
+  }
+}
+
+// ─── Reset code recovery (saisie pour effacer l'app) ───
+function showResetRecovery(){
+  $('lockscreen').style.display='none';
+  $('pin-reset-recovery').style.display='flex';
+  $('reset-code-input').value='';
+  $('reset-code-error').textContent='';
+  setTimeout(()=>$('reset-code-input').focus(), 100);
+}
+
+function hideResetRecovery(){
+  $('pin-reset-recovery').style.display='none';
+  $('lockscreen').style.display='flex';
+}
+
+async function verifyResetCode(){
+  const input = $('reset-code-input').value.trim();
+  if(!input){
+    $('reset-code-error').textContent = 'Entrez votre code de reset';
+    return;
+  }
+  
+  const storedHash = localStorage.getItem('scribflow_reset_hash');
+  if(!storedHash){
+    $('reset-code-error').textContent = 'Aucun code configuré sur cet appareil';
+    return;
+  }
+  
+  const inputHash = await hashCode(input);
+  if(inputHash === storedHash){
+    // Code correct → reset total
+    $('reset-code-error').textContent = '';
+    
+    // Effacer TOUTES les données
+    localStorage.clear();
+    
+    // Recharger la page = repart de zéro
+    showToast('🔄 Application réinitialisée. Rechargement...','var(--green)');
+    setTimeout(()=>{ location.reload(); }, 1500);
+  } else {
+    $('reset-code-error').textContent = 'Code incorrect';
+  }
 }
 
 // ─── Forgot PIN ───
