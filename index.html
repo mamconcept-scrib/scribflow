@@ -601,7 +601,7 @@ const DICT_PERSO = {
   // 1=Alimentation
   carrefour:1,leclerc:1,auchan:1,lidl:1,intermarché:1,monoprix:1,franprix:1,casino:1,picard:1,
   thiriet:1,aldi:1,netto:1,"grand frais":1,biocoop:1,naturalia:1,
-  courses:1,supermarché:1,marché:1,boulangerie:1,boucherie:1,épicerie:1,primeur:1,poissonnier:1,traiteur:1,
+  courses:1,course:1,supermarché:1,marché:1,boulangerie:1,boucherie:1,épicerie:1,primeur:1,poissonnier:1,traiteur:1,
   restaurant:1,resto:1,mcdo:1,mcdonald:1,"mcdonald's":1,burger:1,"burger king":1,pizza:1,sushi:1,kebab:1,snack:1,
   deliveroo:1,ubereats:1,"uber eats":1,justeat:1,"just eat":1,
   // Enseignes Martinique (972)
@@ -818,6 +818,10 @@ window.addEventListener('beforeunload', releaseVoiceSession);
 // Corrections phonétiques pour les mots que Safari confond systématiquement
 // Clé = ce que Safari transcrit (mauvais), Valeur = le bon mot
 const VOICE_CORRECTIONS = {
+  // ─── Mots financiers courants mal reconnus par iOS ───
+  // "courses" est très utilisé → on normalise "course" (singulier) en "Courses"
+  // Le \b garantit qu'on NE touche PAS "cours" seul (cours de piano, etc.)
+  'course':'Courses','coursey':'Courses','courson':'Courses','coursent':'Courses','kours':'Courses','kourse':'Courses','la course':'Courses','les course':'Courses','mes course':'Courses',
   // Enseignes mal reconnues — alimentation
   'thirez':'Thiriet','thirier':'Thiriet','tirez':'Thiriet','thiriez':'Thiriet','tiriez':'Thiriet','thierry':'Thiriet',
   'carefour':'Carrefour','car refour':'Carrefour','quatre four':'Carrefour',
@@ -833,7 +837,7 @@ const VOICE_CORRECTIONS = {
   'méga madiana':'Méga Madiana','mega madiana':'Méga Madiana',
   'la galleria':'La Galleria','galleria':'Galleria','galeria':'Galleria','galéria':'Galleria',
   'dillon':'Dillon','dilone':'Dillon','dilon':'Dillon',
-  'génipa':'Génipa','genipa':'Génipa','géni pas':'Génipa','jenny pas':'Génipa','janipa':'Génipa',
+  'génipa':'Génipa','genipa':'Génipa','géni pas':'Génipa','jenny pas':'Génipa','janipa':'Génipa','génie pas':'Génipa','j\'ai nippa':'Génipa','geni pas':'Génipa','génipà':'Génipa','jénipa':'Génipa',
   'terca':'Terca','terka':'Terca','terça':'Terca',
   'cluny':'Cluny','clunie':'Cluny',
   'ecoumax':'Ecomax','écomax':'Ecomax','éco max':'Ecomax','eco max':'Ecomax','aikomax':'Ecomax',
