@@ -919,11 +919,23 @@ function startVoice() {
   
   recognition = new SR();
   recognition.lang = 'fr-FR';
-  recognition.continuous = false;
+  // continuous=true : laisse iOS capter la phrase complète (plus fiable en PWA standalone)
+  recognition.continuous = true;
   recognition.interimResults = true;
   recognition.maxAlternatives = 1;
   
   const micBtn = $('mic-btn');
+  let silenceTimer = null;
+  let finalTranscript = '';
+  const SILENCE_MS = 1800; // arrêt auto après 1,8s de silence
+  
+  function clearSilence(){ if(silenceTimer){ clearTimeout(silenceTimer); silenceTimer=null; } }
+  function armSilence(){
+    clearSilence();
+    silenceTimer = setTimeout(()=>{
+      try { recognition.stop(); } catch(e) {}
+    }, SILENCE_MS);
+  }
   
   recognition.onstart = () => {
     isListening = true;
@@ -931,43 +943,59 @@ function startVoice() {
     micBtn.style.borderColor = 'var(--red)';
     micBtn.style.animation = 'pulse 1s infinite';
     showVoiceStatus("🎙️ Parlez maintenant... (ex: «Carrefour quatre-vingt-sept euros»)", true);
+    armSilence();
   };
   
   recognition.onresult = (event) => {
-    const transcript = event.results[0][0].transcript;
-    const isFinal = event.results[0].isFinal;
-    
-    if (isFinal) {
-      // DIAGNOSTIC : montrer le texte BRUT d'iOS avant toute correction
-      const corrected = fixVoiceText(transcript.trim());
-      if(transcript.trim().toLowerCase() !== corrected.toLowerCase()){
-        console.log(`[DICTÉE] iOS a entendu: "${transcript}" → après correction: "${corrected}"`);
+    // Accumuler tous les segments (continuous peut en produire plusieurs)
+    let interim = '';
+    finalTranscript = '';
+    for (let i = 0; i < event.results.length; i++) {
+      const seg = event.results[i][0].transcript;
+      if (event.results[i].isFinal) {
+        finalTranscript += seg + ' ';
       } else {
-        console.log(`[DICTÉE] iOS a entendu: "${transcript}" (aucune correction appliquée)`);
+        interim += seg;
       }
-      parseVoiceInput(transcript);
-    } else {
-      // Show interim result
-      showVoiceStatus(`🎙️ "${transcript}"...`, true);
     }
+    // Toute nouvelle parole réarme le timer de silence
+    armSilence();
+    // Afficher le texte en cours (interim ou final partiel)
+    const shown = (finalTranscript + interim).trim();
+    if (shown) showVoiceStatus(`🎙️ "${shown}"...`, true);
   };
   
   recognition.onerror = (event) => {
+    clearSilence();
     isListening = false;
     resetMicBtn();
     if (event.error === 'no-speech') {
       showVoiceStatus("🔇 Aucune voix détectée — réessayez", false);
     } else if (event.error === 'not-allowed') {
       showVoiceStatus("🚫 Accès micro refusé — autorisez le micro dans les paramètres", false);
+    } else if (event.error === 'aborted') {
+      // Arrêt volontaire, pas une vraie erreur
     } else {
       showVoiceStatus(`❌ Erreur: ${event.error}`, false);
     }
   };
   
   recognition.onend = () => {
+    clearSilence();
     isListening = false;
     resetMicBtn();
-    // Libère immédiatement la session audio pour ne pas bloquer Bluetooth voiture
+    // Traiter le texte accumulé au moment de l'arrêt
+    const result = finalTranscript.trim();
+    if (result) {
+      const corrected = fixVoiceText(result);
+      if(result.toLowerCase() !== corrected.toLowerCase()){
+        console.log(`[DICTÉE] iOS a entendu: "${result}" → après correction: "${corrected}"`);
+      } else {
+        console.log(`[DICTÉE] iOS a entendu: "${result}" (aucune correction appliquée)`);
+      }
+      parseVoiceInput(result);
+    }
+    // Libère la session audio (évite de bloquer le Bluetooth voiture)
     try { recognition.abort(); } catch(e) {}
     recognition = null;
   };
