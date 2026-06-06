@@ -601,6 +601,8 @@ const DICT_PERSO = {
   carrefour:1,leclerc:1,auchan:1,lidl:1,intermarché:1,monoprix:1,franprix:1,casino:1,picard:1,
   thiriet:1,aldi:1,netto:1,"grand frais":1,biocoop:1,naturalia:1,
   courses:1,course:1,supermarché:1,marché:1,boulangerie:1,boucherie:1,épicerie:1,primeur:1,poissonnier:1,traiteur:1,
+  pain:1,baguette:1,croissant:1,viennoiserie:1,pâtisserie:1,gâteau:1,lait:1,oeufs:1,fromage:1,yaourt:1,beurre:1,
+  viande:1,poulet:1,poisson:1,légumes:1,fruits:1,pâtes:1,riz:1,café:1,thé:1,eau:1,jus:1,boisson:1,apéro:1,
   restaurant:1,resto:1,mcdo:1,mcdonald:1,"mcdonald's":1,burger:1,"burger king":1,pizza:1,sushi:1,kebab:1,snack:1,
   deliveroo:1,ubereats:1,"uber eats":1,justeat:1,"just eat":1,
   // Enseignes Martinique (972)
@@ -717,10 +719,15 @@ function localCat(label) {
   for (const w of words) {
     if (w.length < 2) continue;
     if (dict[w] !== undefined) return { idx: dict[w], source: 'auto' };
-    // Partial match (start of word)
+  }
+  // Partial match SEULEMENT pour les mots longs (≥5 lettres) et préfixe complet
+  // (évite "pain" qui matche par erreur un mot Transport via 4 lettres communes)
+  for (const w of words) {
+    if (w.length < 5) continue;
     for (const [key, val] of Object.entries(dict)) {
-      if (key.length >= 3 && w.startsWith(key.slice(0,4))) return { idx: val, source: 'auto' };
-      if (w.length >= 3 && key.startsWith(w.slice(0,4))) return { idx: val, source: 'auto' };
+      if (key.length < 5) continue;
+      // Match seulement si l'un est un vrai préfixe de l'autre (≥5 caractères)
+      if (w.startsWith(key) || key.startsWith(w)) return { idx: val, source: 'auto' };
     }
   }
   return null;
@@ -766,29 +773,18 @@ function autoCat(val) {
   const label = val.trim();
   if (label.length < 2) { hideBadge(); return; }
   
-  // 1. Try local first (instant)
+  // Recherche locale uniquement (dico + historique des transactions)
   const local = localCat(label);
   if (local) {
     showBadge(local.idx, local.source);
     return;
   }
   
-  // 2. Fallback: Claude API with debounce (500ms)
-  if (acTimeout) clearTimeout(acTimeout);
-  acTimeout = setTimeout(async () => {
-    // Show loading
-    const badge = $('ai-badge');
-    badge.style.display = 'flex';
-    badge.innerHTML = '<span style="color:var(--blue)">🤖 Analyse IA en cours...</span>';
-    
-    const result = await claudeCat(label);
-    // Check label hasn't changed during the async call
-    if ($('el').value.trim() === label && result) {
-      showBadge(result.idx, result.source);
-    } else if ($('el').value.trim() === label) {
-      badge.innerHTML = '<span style="color:var(--t4)">Catégorie non détectée — sélection manuelle</span>';
-    }
-  }, 600);
+  // Pas de correspondance → on laisse l'utilisateur choisir manuellement
+  // (Pas d'appel API : l'app est 100% locale, fonctionne hors-ligne)
+  const badge = $('ai-badge');
+  badge.style.display = 'flex';
+  badge.innerHTML = '<span style="color:var(--t4)">Catégorie non détectée — choisissez ci-dessous</span>';
 }
 
 // ─── DICTÉE VOCALE ───
