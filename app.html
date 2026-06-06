@@ -3901,7 +3901,18 @@ if(getPIN()){
 
 // ─── PWA Service Worker Registration ───
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/scribflow/sw.js').then(()=>console.log('SW registered')).catch(e=>console.log('SW failed',e));
+  navigator.serviceWorker.register('/scribflow/sw.js').then((reg)=>{
+    console.log('SW registered');
+    // Vérifier les mises à jour à chaque lancement
+    reg.update();
+    // Si un nouveau SW prend le contrôle, recharger pour avoir la dernière version
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', ()=>{
+      if(refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+  }).catch(e=>console.log('SW failed',e));
 }
 </script>
 </body>

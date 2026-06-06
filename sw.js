@@ -1,4 +1,4 @@
-const CACHE_NAME = 'scribflow-v5';
+const CACHE_NAME = 'scribflow-v6';
 const ASSETS = [
   '/scribflow/',
   '/scribflow/index.html',
@@ -27,17 +27,18 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('fetch', event => {
-  // Network-first pour les pages HTML (pour toujours avoir la dernière version)
+  // Network-first STRICT pour les pages HTML : on tente TOUJOURS le réseau d'abord.
+  // Le cache n'est utilisé QUE si le réseau échoue complètement (hors-ligne).
   if (event.request.url.includes('.html') || event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).then(response => {
+      fetch(event.request, { cache: 'no-store' }).then(response => {
         const clone = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
         return response;
       }).catch(() => caches.match(event.request))
     );
   } else {
-    // Cache-first pour tout le reste (icônes, manifests, etc.)
+    // Cache-first pour les assets statiques (icônes, manifests)
     event.respondWith(
       caches.match(event.request).then(cached => cached || fetch(event.request))
     );
