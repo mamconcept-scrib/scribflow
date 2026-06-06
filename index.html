@@ -825,7 +825,7 @@ const VOICE_CORRECTIONS = {
   // Enseignes mal reconnues — alimentation
   'thirez':'Thiriet','thirier':'Thiriet','tirez':'Thiriet','thiriez':'Thiriet','tiriez':'Thiriet','thierry':'Thiriet',
   'carefour':'Carrefour','car refour':'Carrefour','quatre four':'Carrefour',
-  'lidl':'Lidl','lidel':'Lidl','lideul':'Lidl','lille':'Lidl',
+  'lidl':'Lidl','lidel':'Lidl','lideul':'Lidl',
   'biocop':'Biocoop','bio coop':'Biocoop','bio cop':'Biocoop',
   'franc prix':'Franprix','frant prix':'Franprix',
   'intermarché':'Intermarché','inter marché':'Intermarché',
@@ -848,11 +848,11 @@ const VOICE_CORRECTIONS = {
   'le lamentin':'Le Lamentin','lamentin':'Lamentin',
   'ducos':'Ducos','du co':'Ducos',
   'le robert':'Le Robert',
-  'le marin':'Le Marin','marin':'Le Marin',
+  'le marin':'Le Marin',
   'trinité':'Trinité','tri nité':'Trinité',
   'capesterre':'Capesterre','cap esterre':'Capesterre','cape sterre':'Capesterre',
   // Enseignes Martinique - station service
-  'sara':'SARA','sarah':'SARA',
+  'station sara':'SARA',
   'vito':'Vito','vitot':'Vito','vitau':'Vito',
   'rubis':'Rubis','rubi':'Rubis',
   // Transport Martinique
@@ -863,9 +863,9 @@ const VOICE_CORRECTIONS = {
   'chu de martinique':'CHU de Martinique','chu martinique':'CHU Martinique',
   'mangot vulcin':'Mangot-Vulcin','mango vulcan':'Mangot-Vulcin','mangot vulcan':'Mangot-Vulcin',
   'clarac':'Clarac','claraque':'Clarac',
-  'meynard':'Meynard','ménard':'Meynard',
+  'hôpital meynard':'Meynard',
   'saint paul':'Saint-Paul','saint-paul':'Saint-Paul',
-  'choisy':'Choisy','choisi':'Choisy',
+  'quartier choisy':'Choisy',
   // Enseignes Guadeloupe (au cas où tu y vas)
   'milénis':'Milénis','milenisse':'Milénis','millénis':'Milénis','mille nid':'Milénis','millenium':'Milénis',
   'destrelande':'Destreland','destrelan':'Destreland','destre land':'Destreland',
@@ -877,7 +877,7 @@ const VOICE_CORRECTIONS = {
   'orange caraïbe':'Orange Caraïbe','orange caraibes':'Orange Caraïbe',
   'dauphin télécom':'Dauphin Télécom','dauphin telecom':'Dauphin Télécom',
   'outremer télécom':'Outremer Télécom','outre mer télécom':'Outremer Télécom','outremer telecom':'Outremer Télécom',
-  'only':'Only','only télécom':'Only',
+  'only télécom':'Only',
   // Abonnements streaming
   'canal plus':'Canal+','canalplus':'Canal+',
   'netflixe':'Netflix','netflicks':'Netflix',
@@ -943,6 +943,13 @@ function startVoice() {
     const isFinal = event.results[0].isFinal;
     
     if (isFinal) {
+      // DIAGNOSTIC : montrer le texte BRUT d'iOS avant toute correction
+      const corrected = fixVoiceText(transcript.trim());
+      if(transcript.trim().toLowerCase() !== corrected.toLowerCase()){
+        console.log(`[DICTÉE] iOS a entendu: "${transcript}" → après correction: "${corrected}"`);
+      } else {
+        console.log(`[DICTÉE] iOS a entendu: "${transcript}" (aucune correction appliquée)`);
+      }
       parseVoiceInput(transcript);
     } else {
       // Show interim result
