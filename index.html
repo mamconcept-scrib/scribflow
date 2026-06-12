@@ -20,8 +20,8 @@ document.addEventListener('DOMContentLoaded',function(){document.body.className=
 /* ============ SCRIB FLOW v5 — design system ============ */
 :root{
   --brand:#D9402F;
-  --amber:#E8A87C; --amber2:#D98A5C; --teal:#06D6A0; --coral:#EF476F; --violet:#C9B1FF;
-  --gold:#FFD166; --blue:#118AB2; --r:20px; --rs:12px;
+  --amber:#D9402F; --amber2:#A82F22; --teal:#06D6A0; --coral:#EF476F; --violet:#C9B1FF;
+  --gold:#FFD166; --orange:#FF9843; --blue:#118AB2; --r:20px; --rs:12px;
   --mono:'SF Mono','Menlo','Consolas','Liberation Mono',monospace;
   --sans:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;
   --nav-h:64px;
@@ -39,7 +39,7 @@ html.light{
   --t1:#1C1A17; --t2:rgba(28,26,23,.66); --t3:rgba(28,26,23,.42); --t4:rgba(28,26,23,.22);
   --modal:#FFFFFF; --in-bg:rgba(20,18,14,.05); --in-line:rgba(20,18,14,.16);
   --nav-bg:rgba(255,255,255,.9); --shadow:0 10px 30px rgba(40,30,20,.14);
-  --amber:#c87a55; --amber2:#b56a47; --teal:#059E78; --coral:#D63B5C; --violet:#7B68C9; --gold:#C5930E; --blue:#0E7A96;
+  --amber:#B5352B; --amber2:#962B22; --teal:#059E78; --coral:#D63B5C; --violet:#7B68C9; --gold:#C5930E; --orange:#D4623A; --blue:#0E7A96;
 }
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{background:#000}
@@ -79,14 +79,17 @@ input[type=color]{padding:3px;width:44px;height:38px;cursor:pointer}
 .mode-row{display:flex;gap:8px;margin:14px 0 18px}
 .mode-btn{flex:1;padding:10px;border-radius:14px;border:1px solid var(--line);background:var(--card);
   color:var(--t3);font-size:13.5px;font-weight:600;transition:all .18s}
-.mode-btn.on{color:#1A1208;background:linear-gradient(135deg,var(--amber),var(--amber2));border-color:transparent;
-  box-shadow:0 6px 18px rgba(216,138,92,.3)}
-html.light .mode-btn.on{color:#fff}
+.mode-btn.on{color:#fff;background:linear-gradient(135deg,var(--amber),var(--amber2));border-color:transparent;
+  box-shadow:0 6px 18px rgba(217,64,47,.3)}
+
+.mode-banner{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;margin:-6px 0 14px;letter-spacing:.6px}
+.mode-banner.perso{background:rgba(6,214,160,.15);color:var(--teal);border:1px solid rgba(6,214,160,.25)}
+.mode-banner.pro{background:rgba(201,177,255,.15);color:var(--violet);border:1px solid rgba(201,177,255,.25)}
 
 /* ---- budget hero ---- */
 .hero{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:14px;position:relative;overflow:hidden}
 .hero::before{content:"";position:absolute;inset:-40% -20% auto;height:120%;
-  background:radial-gradient(ellipse at 80% 0%,rgba(232,168,124,.13),transparent 60%);pointer-events:none}
+  background:radial-gradient(ellipse at 80% 0%,rgba(217,64,47,.12),transparent 60%);pointer-events:none}
 .hero-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
 .hero-label{font-size:11.5px;letter-spacing:1.4px;color:var(--t3);text-transform:uppercase;font-weight:600}
 .month-nav{display:flex;align-items:center;gap:4px}
@@ -110,8 +113,7 @@ html.light .mode-btn.on{color:#fff}
 .btn{border:none;border-radius:13px;padding:11px 16px;font-size:14px;font-weight:600;color:var(--t1);
   background:var(--card2);transition:transform .1s,opacity .15s}
 .btn:active{transform:scale(.97)}
-.btn.b-amber{background:linear-gradient(135deg,var(--amber),var(--amber2));color:#1A1208}
-html.light .btn.b-amber{color:#fff}
+.btn.b-amber{background:linear-gradient(135deg,var(--amber),var(--amber2));color:#fff}
 .btn.b-teal{background:var(--teal);color:#062B21}
 .btn.b-coral{background:var(--coral);color:#fff}
 .btn.b-ghost{background:transparent;border:1px solid var(--line2);color:var(--t2)}
@@ -123,7 +125,8 @@ html.light .btn.b-amber{color:#fff}
 .alerts{margin-bottom:14px;display:flex;flex-direction:column;gap:8px}
 .alert{display:flex;align-items:center;gap:10px;border-radius:14px;padding:11px 14px;font-size:13px;border:1px solid}
 .alert.red{background:rgba(255,88,118,.1);border-color:rgba(255,88,118,.35);color:var(--coral)}
-.alert.orange{background:rgba(244,132,95,.1);border-color:rgba(244,132,95,.35);color:var(--amber)}
+.alert.orange{background:rgba(255,152,67,.1);border-color:rgba(255,152,67,.4);color:var(--orange)}
+.alert.green{background:rgba(6,214,160,.09);border-color:rgba(6,214,160,.3);color:var(--teal)}
 
 /* ---- sections ---- */
 .sec{background:var(--card);border:1px solid var(--line);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
@@ -152,7 +155,8 @@ html.light .btn.b-amber{color:#fff}
 .row .acts button:active{background:var(--card2)}
 .pill{font-size:10.5px;font-weight:600;border-radius:99px;padding:2px 8px;margin-left:6px;vertical-align:middle}
 .pill.red{background:rgba(255,88,118,.15);color:var(--coral)}
-.pill.orange{background:rgba(244,132,95,.15);color:var(--amber)}
+.pill.orange{background:rgba(255,152,67,.16);color:var(--orange)}
+.pill.green{background:rgba(6,214,160,.14);color:var(--teal)}
 .pill.teal{background:rgba(19,214,163,.15);color:var(--teal)}
 .pill.violet{background:rgba(185,164,255,.15);color:var(--violet)}
 .locked-amt{filter:blur(7px);user-select:none}
@@ -187,7 +191,7 @@ html.light .btn.b-amber{color:#fff}
 .hab-day.today{outline:1.5px solid var(--t3)}
 
 /* ---- résumé intelligent ---- */
-.smart{background:linear-gradient(135deg,rgba(185,164,255,.1),rgba(242,163,107,.08));
+.smart{background:linear-gradient(135deg,rgba(201,177,255,.1),rgba(217,64,47,.07));
   border:1px solid rgba(185,164,255,.25);border-radius:var(--r);padding:15px 17px;margin-bottom:14px;font-size:13.5px;line-height:1.65;color:var(--t2)}
 .smart b{color:var(--t1)}
 
@@ -200,9 +204,8 @@ html.light .btn.b-amber{color:#fff}
 .nav-btn i{font-style:normal;font-size:19px}
 .nav-btn.on{color:var(--amber)}
 .mic-fab{width:58px;height:58px;border-radius:50%;border:none;margin-top:-26px;position:relative;
-  background:linear-gradient(145deg,var(--amber),var(--amber2));color:#1A1208;font-size:24px;
-  box-shadow:0 8px 22px rgba(216,138,92,.45);transition:transform .12s}
-html.light .mic-fab{color:#fff}
+  background:linear-gradient(145deg,var(--amber),var(--amber2));color:#fff;font-size:24px;
+  box-shadow:0 8px 22px rgba(217,64,47,.45);transition:transform .12s}
 .mic-fab:active{transform:scale(.93)}
 .mic-fab.live::after{content:"";position:absolute;inset:-7px;border-radius:50%;border:2px solid var(--amber);
   animation:pulse 1.3s ease-out infinite}
@@ -251,10 +254,13 @@ html.light .mic-fab{color:#fff}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}75%{transform:translateX(9px)}}
 
 /* ---- toast ---- */
-.toast{position:fixed;left:50%;bottom:calc(var(--nav-h) + env(safe-area-inset-bottom) + 22px);transform:translateX(-50%) translateY(16px);
-  background:var(--modal);border:1px solid var(--line2);color:var(--t1);border-radius:14px;padding:11px 18px;font-size:13.5px;
-  box-shadow:var(--shadow);z-index:300;opacity:0;pointer-events:none;transition:all .28s;max-width:88vw;text-align:center}
+.toast{position:fixed;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%) translateY(-18px);
+  color:#fff;border:none;border-radius:12px;padding:12px 22px;font-size:13px;font-weight:600;
+  box-shadow:0 10px 28px rgba(0,0,0,.4);z-index:300;opacity:0;pointer-events:none;transition:all .3s;max-width:90vw;text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{background:rgba(6,214,160,.92)}
+.toast.err{background:rgba(239,71,111,.92)}
+.toast.info{background:rgba(17,138,178,.92)}
 
 /* ---- liste réglages ---- */
 .set-row{display:flex;align-items:center;gap:12px;padding:14px 2px;border-bottom:1px solid var(--line);
@@ -292,6 +298,7 @@ html.light .mic-fab{color:#fff}
 
   <!-- ===== PAGE BUDGET ===== -->
   <main id="page-budget" class="page">
+    <div id="mode-banner" class="mode-banner"></div>
     <div id="alerts" class="alerts"></div>
 
     <section class="hero">
@@ -349,10 +356,10 @@ html.light .mic-fab{color:#fff}
         <button class="btn b-ghost full sec-add" data-action="open" data-m="m-vou">+ Ajouter un bon</button></div>
     </section>
 
-    <section class="sec" data-sec="inv">
-      <div class="sec-head" data-action="toggleSec" data-s="inv"><h2>📄 Factures <span class="count" id="cnt-inv"></span></h2><span class="chev">▼</span></div>
-      <div class="sec-body"><div id="list-inv"></div>
-        <button class="btn b-ghost full sec-add" data-action="open" data-m="m-inv">+ Nouvelle facture</button></div>
+    <section class="sec" data-sec="rem">
+      <div class="sec-head" data-action="toggleSec" data-s="rem"><h2>⏰ Rappels <span class="count" id="cnt-rem"></span></h2><span class="chev">▼</span></div>
+      <div class="sec-body"><div id="list-rem"></div>
+        <button class="btn b-ghost full sec-add" data-action="open" data-m="m-rem">+ Nouveau rappel</button></div>
     </section>
   </main>
 
@@ -583,21 +590,17 @@ html.light .mic-fab{color:#fff}
   </div>
 </div></div>
 
-<!-- Facture -->
-<div class="mo" id="m-inv"><div class="md">
-  <div class="mh"><span class="mt" id="inv-title">📄 Facture</span><button class="mc" data-action="close" data-m="m-inv">✕</button></div>
+<!-- Rappel -->
+<div class="mo" id="m-rem"><div class="md">
+  <div class="mh"><span class="mt" id="rem-title">⏰ Nouveau rappel</span><button class="mc" data-action="close" data-m="m-rem">✕</button></div>
   <div class="mf">
-    <div class="frow">
-      <div><span class="mflbl">N° facture</span><input id="fno" placeholder="2026-001"></div>
-      <div><span class="mflbl">Date</span><input id="fdate" type="date"></div>
-    </div>
-    <span class="mflbl">Client</span>
-    <div class="frow"><input id="fclient" placeholder="Nom du client" autocomplete="off">
-      <button class="mic-inline" data-action="dictate" data-t="fclient">🎤</button></div>
-    <span class="mflbl">Lignes <button class="btn b-ghost" style="padding:4px 10px;font-size:12px;margin-left:8px" data-action="invAddLine">+ ligne</button></span>
-    <div id="inv-lines"></div>
-    <div style="text-align:right;font-family:var(--mono);font-weight:700" id="inv-total">Total : 0,00 €</div>
-    <button class="btn b-amber full" data-action="saveInv">Enregistrer la facture</button>
+    <span class="mflbl">Rappel (dictez la date, elle sera détectée)</span>
+    <div class="frow"><input id="rml" placeholder="Ex : Facture Odyssi à payer" autocomplete="off">
+      <button class="mic-inline" data-action="dictate" data-t="rml">🎤</button></div>
+    <div style="font-size:12px;color:var(--t3)">💡 Dites « Facture Odyssi à payer avant le 15 juillet »</div>
+    <span class="mflbl">Échéance (ajustez au calendrier)</span>
+    <input id="rmd" type="date">
+    <button class="btn b-amber full" data-action="saveRem">Enregistrer le rappel</button>
   </div>
 </div></div>
 
@@ -644,7 +647,6 @@ html.light .mic-fab{color:#fff}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 "use strict";
 /* ================================================================
@@ -664,7 +666,7 @@ const gid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const todayISO = () => { const n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); };
 function fmt(v){ try{ return new Intl.NumberFormat('fr-FR',{style:'currency',currency:S.currency||'EUR'}).format(v||0); }catch(e){ return (v||0).toFixed(2)+' €'; } }
-function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),2400); }
+function toast(msg, type='ok'){ const t=$('toast'); t.textContent=msg; t.className='toast '+type+' show'; clearTimeout(toast._t); toast._t=setTimeout(()=>t.classList.remove('show'),3000); }
 function norm(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
 
 /* ---------- STORE ---------- */
@@ -672,14 +674,14 @@ let S;
 function defaultState(){
   const n = new Date();
   return { mode:'perso', yr:n.getFullYear(), mo:n.getMonth(), page:'budget',
-    tx:[], inc:[], bgt:{}, hab:[], hl:{}, rec:[], inst:[], goals:[], vou:[], inv:[],
+    tx:[], inc:[], bgt:{}, hab:[], hl:{}, rec:[], inst:[], goals:[], vou:[], rem:[],
     currency:'EUR', hideInc:false, sec:{}, v:5 };
 }
 function migrate(raw){
   // Compatible v4 : on conserve toutes les données existantes, on complète les champs v5
   const d = defaultState();
   const s = Object.assign(d, raw||{});
-  for (const k of ['tx','inc','hab','rec','inst','goals','vou','inv']) if(!Array.isArray(s[k])) s[k]=[];
+  for (const k of ['tx','inc','hab','rec','inst','goals','vou','rem']) if(!Array.isArray(s[k])) s[k]=[];
   if (typeof s.bgt!=='object'||!s.bgt) s.bgt={};
   if (typeof s.hl!=='object'||!s.hl) s.hl={};
   if (!s.currency) s.currency='EUR';
@@ -696,7 +698,7 @@ let _svT=null;
 function sv(){
   clearTimeout(_svT);
   _svT = setTimeout(()=>{ try{ localStorage.setItem(CFG.sk, JSON.stringify(S)); }
-    catch(e){ toast('⚠️ Stockage plein — supprimez des photos de bons'); } }, 120);
+    catch(e){ toast('❌ Stockage plein — supprimez des photos de bons','err'); } }, 120);
 }
 
 /* ---------- CATÉGORIES ---------- */
@@ -1039,6 +1041,40 @@ function parseVoiceInput(raw){
   return { label, amount, merchant, catIdx: c?c.idx:null, catSource: c?c.source:null };
 }
 
+/* ---------- DATES FRANÇAISES DICTÉES ---------- */
+const FR_MONTHS={janvier:1,fevrier:2,mars:3,avril:4,mai:5,juin:6,juillet:7,aout:8,septembre:9,octobre:10,novembre:11,decembre:12};
+function parseVoiceDate(text){
+  // « avant le 15 juillet », « pour le 3 août 2026 », « le 15/07 », « demain »
+  const today=new Date(todayISO());
+  let m, date=null, matched='';
+  if ((m = text.match(/(\d{1,2})[\/.\-](\d{1,2})(?:[\/.\-](\d{2,4}))?/))){
+    const y = m[3] ? (+m[3]<100 ? 2000 + +m[3] : +m[3]) : today.getFullYear();
+    date=new Date(y, +m[2]-1, +m[1]); matched=m[0];
+    if (!m[3] && date<today) date=new Date(y+1, +m[2]-1, +m[1]);
+  }
+  if (!date && (m = text.match(/\b(1er|\d{1,2})\s+(janvier|f[ée]vrier|mars|avril|mai|juin|juillet|ao[ûu]t|septembre|octobre|novembre|d[ée]cembre)(?:\s+(\d{4}))?/i))){
+    const day = m[1].toLowerCase()==='1er' ? 1 : +m[1];
+    const mo = FR_MONTHS[norm(m[2])]-1;
+    let y = m[3] ? +m[3] : today.getFullYear();
+    date=new Date(y,mo,day);
+    if (!m[3] && date<today) date=new Date(y+1,mo,day);
+    matched=m[0];
+  }
+  if (!date){
+    if (/apr[èe]s[- ]demain/i.test(text)){ date=new Date(today); date.setDate(date.getDate()+2); matched=text.match(/apr[èe]s[- ]demain/i)[0]; }
+    else if (/\bdemain\b/i.test(text)){ date=new Date(today); date.setDate(date.getDate()+1); matched=text.match(/\bdemain\b/i)[0]; }
+  }
+  if (!date) return null;
+  const iso=date.getFullYear()+'-'+String(date.getMonth()+1).padStart(2,'0')+'-'+String(date.getDate()).padStart(2,'0');
+  return { date: iso, matched };
+}
+function cleanRemLabel(text, matched){
+  let l = matched ? text.replace(matched,' ') : text;
+  l = l.replace(/(\s+(avant|pour|d'ici|jusqu'au|le|au))+\s*$/i,' ').replace(/\b(avant|pour|d'ici|jusqu'au)\s+le?\s*/gi,' ')
+       .replace(/\s+/g,' ').trim().replace(/[,;:]$/,'');
+  return l.replace(/^./, c=>c.toUpperCase());
+}
+
 /* ---------- DICTÉE VOCALE (Web Speech API) ---------- */
 let recognition=null, vxRec=null;
 function releaseVoiceSession(){
@@ -1063,7 +1099,7 @@ function makeRec(){
 }
 /* Dictée champ par champ */
 function dictate(d, btn){
-  if (!speechAvailable()){ toast('Dictée non disponible sur ce navigateur'); return; }
+  if (!speechAvailable()){ toast('❌ Dictée non disponible sur ce navigateur','err'); return; }
   if (recognition){ releaseVoiceSession(); return; }
   const input = $(d.t);
   recognition = makeRec();
@@ -1082,11 +1118,17 @@ function dictate(d, btn){
         }
         autoCatBadge(input.value);
       }
+    } else if (d.t==='rml'){
+      input.value = fixed;
+      if (e.results[e.results.length-1].isFinal){
+        const pd = parseVoiceDate(fixed);
+        if (pd){ $('rmd').value = pd.date; input.value = cleanRemLabel(fixed, pd.matched); }
+      }
     } else {
       input.value = fixed;
     }
   };
-  recognition.onerror = () => { toast('Micro indisponible'); endRec(btn); };
+  recognition.onerror = () => { toast('❌ Micro indisponible','err'); endRec(btn); };
   recognition.onend = () => endRec(btn);
   recognition.start();
 }
@@ -1134,7 +1176,7 @@ function vxParse(txt){
 function vxSave(){
   if (!vxData || vxData.amount===null) return;
   S.tx.push({id:gid(), l:(vxData.label||'Dépense vocale')+(vxData.merchant?' — '+vxData.merchant:''), a:vxData.amount, ci:parseInt($('vx-cat').value)||0, d:todayISO(), m:S.mode, ts:Date.now()});
-  sv(); closeModal('m-vx'); R(); toast('Dépense enregistrée 🎤');
+  const c=cat(parseInt($('vx-cat').value)||0); sv(); closeModal('m-vx'); R(); toast(`✅ Dépense ajoutée : ${vxData.label} — ${fmt(vxData.amount)} (${c.i} ${c.n})`);
 }
 function vxClose(){ vxStop(); closeModal('m-vx'); }
 
@@ -1151,7 +1193,7 @@ function openModal(id){
   if (id==='m-bgt'){ $('bv').value = S.bgt[`${S.yr}-${S.mo}-${S.mode}`]||''; }
   if (id==='m-cats') renderCats();
   if (id==='m-vou' && !editing.vou){ ['vm','vv','vexp','vphoto'].forEach(i=>$(i).value=''); $('vtp').value='bon'; $('vou-title').textContent='🎟️ Bon / carte / coupon'; }
-  if (id==='m-inv' && !editing.inv){ $('fno').value=nextInvNo(); $('fdate').value=todayISO(); $('fclient').value=''; invLines=[{d:'',q:1,p:''}]; renderInvLines(); $('inv-title').textContent='📄 Facture'; }
+  if (id==='m-rem' && !editing.rem){ $('rml').value=''; $('rmd').value=''; $('rem-title').textContent='⏰ Nouveau rappel'; }
   m.classList.add('open');
 }
 function closeModal(id){ $(id).classList.remove('open'); editing={}; }
@@ -1165,45 +1207,52 @@ function confirmDlg(title,msg,onOk){
 /* ---------- CRUD : DÉPENSES / REVENUS ---------- */
 function saveExp(){
   const l=$('el').value.trim(), a=parseFloat($('ea').value), ci=parseInt($('ec').value)||0, d=$('ed').value||todayISO();
-  if(!l||!(a>0)){ toast('Libellé et montant requis'); return; }
-  if (editing.exp){ const t=S.tx.find(x=>x.id===editing.exp); if(t) Object.assign(t,{l,a,ci,d}); }
+  if(!l||!(a>0)){ toast('❌ Libellé et montant requis','err'); return; }
+  const wasEdit = !!editing.exp;
+  if (wasEdit){ const t=S.tx.find(x=>x.id===editing.exp); if(t) Object.assign(t,{l,a,ci,d}); }
   else S.tx.push({id:gid(),l,a,ci,d,m:S.mode,ts:Date.now()});
-  sv(); closeModal('m-exp'); R(); toast('Dépense enregistrée');
+  const c=cat(ci);
+  sv(); closeModal('m-exp'); R();
+  toast(wasEdit ? `✏️ Dépense modifiée : ${l} — ${fmt(a)}` : `✅ Dépense ajoutée : ${l} — ${fmt(a)} (${c.i} ${c.n})`);
 }
 function editExp(d){ const t=S.tx.find(x=>x.id===d.id); if(!t) return;
   editing={exp:t.id}; openModal('m-exp');
   $('exp-title').textContent='✏️ Modifier la dépense';
   $('el').value=t.l; $('ea').value=t.a; $('ed').value=t.d; fillCatSelect($('ec'),t.ci); $('cat-badge').style.display='none'; }
 function delExp(d){ const t=S.tx.find(x=>x.id===d.id);
-  confirmDlg('Supprimer','Supprimer la dépense « '+(t?t.l:'')+' » ?',()=>{ S.tx=S.tx.filter(x=>x.id!==d.id); sv(); R(); toast('Supprimée'); }); }
+  confirmDlg('Supprimer','Supprimer la dépense « '+(t?t.l:'')+' » ?',()=>{ S.tx=S.tx.filter(x=>x.id!==d.id); sv(); R(); toast('🗑 Dépense supprimée','err'); }); }
 function saveInc(){
   const l=$('il').value.trim(), a=parseFloat($('ia').value), d=$('id2').value||todayISO();
-  if(!l||!(a>0)){ toast('Libellé et montant requis'); return; }
-  if (editing.inc){ const t=S.inc.find(x=>x.id===editing.inc); if(t) Object.assign(t,{l,a,d}); }
+  if(!l||!(a>0)){ toast('❌ Libellé et montant requis','err'); return; }
+  const wasEdit = !!editing.inc;
+  if (wasEdit){ const t=S.inc.find(x=>x.id===editing.inc); if(t) Object.assign(t,{l,a,d}); }
   else S.inc.push({id:gid(),l,a,d,m:S.mode,ts:Date.now()});
-  sv(); closeModal('m-inc'); R(); toast('Revenu enregistré');
+  sv(); closeModal('m-inc'); R();
+  toast(wasEdit ? `✏️ Revenu modifié : ${l} — ${fmt(a)}` : `✅ Revenu ajouté : ${l} — +${fmt(a)}`);
 }
 function editInc(d){ const t=S.inc.find(x=>x.id===d.id); if(!t) return;
   editing={inc:t.id}; openModal('m-inc'); $('inc-title').textContent='✏️ Modifier le revenu';
   $('il').value=t.l; $('ia').value=t.a; $('id2').value=t.d; }
 function delInc(d){ const t=S.inc.find(x=>x.id===d.id);
-  confirmDlg('Supprimer','Supprimer le revenu « '+(t?t.l:'')+' » ?',()=>{ S.inc=S.inc.filter(x=>x.id!==d.id); sv(); R(); toast('Supprimé'); }); }
+  confirmDlg('Supprimer','Supprimer le revenu « '+(t?t.l:'')+' » ?',()=>{ S.inc=S.inc.filter(x=>x.id!==d.id); sv(); R(); toast('🗑 Revenu supprimé','err'); }); }
 
 /* ---------- RÉCURRENTS ---------- */
 function saveRec(){
   const l=$('rl').value.trim(), a=parseFloat($('ra').value), tp=$('rtp').value, ci=parseInt($('rc').value)||0;
   const start=$('rstart').value, end=$('rend').value||null, cycle=$('rcycle').value||null, renew=$('rrenew').value||null;
-  if(!l||!(a>0)||!start){ toast('Libellé, montant et début requis'); return; }
-  if (editing.rec){ const r=S.rec.find(x=>x.id===editing.rec); if(r) Object.assign(r,{l,a,tp,ci,start,end,cycle,renew}); }
+  if(!l||!(a>0)||!start){ toast('❌ Libellé, montant et début requis','err'); return; }
+  const wasEdit = !!editing.rec;
+  if (wasEdit){ const r=S.rec.find(x=>x.id===editing.rec); if(r) Object.assign(r,{l,a,tp,ci,start,end,cycle,renew}); }
   else S.rec.push({id:gid(),l,a,tp,ci,start,end,cycle,renew,m:S.mode});
-  sv(); closeModal('m-rec'); R(); toast('Récurrent enregistré');
+  sv(); closeModal('m-rec'); R();
+  toast(wasEdit ? `✏️ Récurrent modifié : ${l}` : `✅ Récurrent ajouté : ${l} — ${fmt(a)}/mois`);
 }
 function editRec(d){ const r=S.rec.find(x=>x.id===d.id); if(!r) return;
   editing={rec:r.id}; openModal('m-rec'); $('rec-title').textContent='✏️ Modifier le récurrent';
   $('rtp').value=r.tp; $('rl').value=r.l; $('ra').value=r.a; fillCatSelect($('rc'),r.ci);
   $('rstart').value=r.start; $('rend').value=r.end||''; $('rcycle').value=r.cycle||''; $('rrenew').value=r.renew||''; }
 function delRec(d){ const r=S.rec.find(x=>x.id===d.id);
-  confirmDlg('Supprimer','Supprimer « '+(r?r.l:'')+' » et ses occurrences futures ?',()=>{ S.rec=S.rec.filter(x=>x.id!==d.id); sv(); R(); toast('Supprimé'); }); }
+  confirmDlg('Supprimer','Supprimer « '+(r?r.l:'')+' » et ses occurrences futures ?',()=>{ S.rec=S.rec.filter(x=>x.id!==d.id); sv(); R(); toast('🗑 Récurrent supprimé','err'); }); }
 function recActive(r, yr, mo){
   const cur=yr*12+mo, [sy,sm]=r.start.split('-').map(Number); const s=sy*12+(sm-1);
   if (cur<s) return false;
@@ -1219,9 +1268,10 @@ function instPreview(){
 function saveInst(){
   const l=$('ilbl').value.trim(), total=parseFloat($('itotal').value), dep=parseFloat($('idep').value)||0,
         n=parseInt($('inb').value), tp=$('itp').value, ci=parseInt($('icat').value)||0, start=$('istart').value;
-  if(!l||!(total>0)||!(n>0)||!start){ toast('Champs requis manquants'); return; }
+  if(!l||!(total>0)||!(n>0)||!start){ toast('❌ Champs requis manquants','err'); return; }
   const monthly=(total-dep)/n;
-  if (editing.inst){ const it=S.inst.find(x=>x.id===editing.inst); if(it) Object.assign(it,{l,total,n,monthly,tp,ci,start,dep}); }
+  const editingWasInst = !!editing.inst;
+  if (editingWasInst){ const it=S.inst.find(x=>x.id===editing.inst); if(it) Object.assign(it,{l,total,n,monthly,tp,ci,start,dep}); }
   else {
     S.inst.push({id:gid(),l,total,n,monthly,tp,ci,start,m:S.mode,dep});
     if (dep>0){
@@ -1230,10 +1280,11 @@ function saveInst(){
       else S.inc.push({id:gid(),l:l+' (Apport)',a:dep,d:depDate,m:S.mode,ts:Date.now()});
     }
   }
-  sv(); closeModal('m-inst'); R(); toast('Échéancier enregistré');
+  sv(); closeModal('m-inst'); R();
+  toast(editingWasInst ? `✏️ Échéancier modifié : ${l}` : `✅ Échéancier ajouté : ${l} — ${fmt(monthly)}/mois × ${n}${dep>0?' (apport '+fmt(dep)+')':''}`);
 }
 function delInst(d){ const it=S.inst.find(x=>x.id===d.id);
-  confirmDlg('Supprimer','Supprimer l\'échéancier « '+(it?it.l:'')+' » ?',()=>{ S.inst=S.inst.filter(x=>x.id!==d.id); sv(); R(); toast('Supprimé'); }); }
+  confirmDlg('Supprimer','Supprimer l\'échéancier « '+(it?it.l:'')+' » ?',()=>{ S.inst=S.inst.filter(x=>x.id!==d.id); sv(); R(); toast('🗑 Échéancier supprimé','err'); }); }
 function instMonthIndex(it, yr, mo){
   const [sy,sm]=it.start.split('-').map(Number);
   const k=(yr*12+mo)-(sy*12+(sm-1));
@@ -1243,9 +1294,9 @@ function instMonthIndex(it, yr, mo){
 /* ---------- OBJECTIFS ---------- */
 function saveGoal(){
   const name=$('gn').value.trim(), target=parseFloat($('gt').value), saved=parseFloat($('gs').value)||0;
-  if(!name||!(target>0)){ toast('Nom et cible requis'); return; }
+  if(!name||!(target>0)){ toast('❌ Nom et cible requis','err'); return; }
   S.goals.push({id:gid(),name,target,saved,mode:S.mode});
-  sv(); closeModal('m-goal'); R(); toast('Objectif créé 🎯');
+  sv(); closeModal('m-goal'); R(); toast(`✅ Objectif « ${name} » créé 🎯`);
 }
 let gaddId=null;
 function goalAdd(d){ const g=S.goals.find(x=>x.id===d.id); if(!g) return;
@@ -1254,21 +1305,22 @@ function saveGoalAdd(){
   const g=S.goals.find(x=>x.id===gaddId), v=parseFloat($('gadd-amt').value);
   if(!g||!(v>0)) return;
   g.saved=Math.min(g.target,(g.saved||0)+v);
+  const pct=Math.round(g.saved/g.target*100);
   sv(); closeModal('m-gadd'); R();
-  toast(g.saved>=g.target?'Objectif atteint ! 🎉':'Épargne ajoutée');
+  toast(g.saved>=g.target ? `🎉 Objectif « ${g.name} » atteint !` : `💰 ${fmt(v)} ajoutés à « ${g.name} » (${pct} %)`);
 }
 function delGoal(d){ const g=S.goals.find(x=>x.id===d.id);
-  confirmDlg('Supprimer','Supprimer l\'objectif « '+(g?g.name:'')+' » ?',()=>{ S.goals=S.goals.filter(x=>x.id!==d.id); sv(); R(); }); }
+  confirmDlg('Supprimer','Supprimer l\'objectif « '+(g?g.name:'')+' » ?',()=>{ S.goals=S.goals.filter(x=>x.id!==d.id); sv(); R(); toast('🗑 Objectif supprimé','err'); }); }
 
 /* ---------- HABITUDES ---------- */
 let habColor=0;
 function saveHab(){
-  const n=$('hn').value.trim(); if(!n){ toast('Nom requis'); return; }
+  const n=$('hn').value.trim(); if(!n){ toast('❌ Nom requis','err'); return; }
   S.hab.push({id:gid(),n,c:HC[habColor++%HC.length],m:S.mode});
-  sv(); closeModal('m-hab'); R(); toast('Habitude créée 🌱');
+  sv(); closeModal('m-hab'); R(); toast(`✅ Habitude « ${n} » créée 🌱`);
 }
 function delHab(d){ const h=S.hab.find(x=>x.id===d.id);
-  confirmDlg('Supprimer','Supprimer l\'habitude « '+(h?h.n:'')+' » et son historique ?',()=>{ S.hab=S.hab.filter(x=>x.id!==d.id); sv(); R(); }); }
+  confirmDlg('Supprimer','Supprimer l\'habitude « '+(h?h.n:'')+' » et son historique ?',()=>{ S.hab=S.hab.filter(x=>x.id!==d.id); sv(); R(); toast('🗑 Habitude supprimée','err'); }); }
 function togHab(d){ const k=`${S.yr}-${S.mo}-${d.day}-${d.id}`; S.hl[k]=!S.hl[k]; sv(); R(); }
 function habStreak(h){
   let streak=0; const now=new Date(); let y=now.getFullYear(),m=now.getMonth(),day=now.getDate();
@@ -1294,84 +1346,40 @@ function compressPhoto(file){
 }
 async function saveVou(){
   const tp=$('vtp').value, mch=$('vm').value.trim(), v=parseFloat($('vv').value)||0, exp=$('vexp').value||null;
-  if(!mch){ toast('Enseigne requise'); return; }
+  if(!mch){ toast('❌ Enseigne requise','err'); return; }
   let photo=null; const f=$('vphoto').files[0];
   if (f) photo=await compressPhoto(f);
   if (editing.vou){ const o=S.vou.find(x=>x.id===editing.vou); if(o){ Object.assign(o,{tp,mch,v,exp}); if(photo)o.photo=photo; } }
   else S.vou.push({id:gid(),tp,mch,v,exp,photo,used:false,m:S.mode});
-  sv(); closeModal('m-vou'); R(); toast('Bon enregistré 🎟️');
+  sv(); closeModal('m-vou'); R(); toast(`✅ ${VOU_ICON[tp]} ${mch} enregistré — ${fmt(v)}`);
 }
 function togVou(d){ const o=S.vou.find(x=>x.id===d.id); if(o){ o.used=!o.used; sv(); R(); } }
 function delVou(d){ const o=S.vou.find(x=>x.id===d.id);
-  confirmDlg('Supprimer','Supprimer « '+(o?o.mch:'')+' » ?',()=>{ S.vou=S.vou.filter(x=>x.id!==d.id); sv(); R(); }); }
+  confirmDlg('Supprimer','Supprimer « '+(o?o.mch:'')+' » ?',()=>{ S.vou=S.vou.filter(x=>x.id!==d.id); sv(); R(); toast('🗑 Bon supprimé','err'); }); }
 function vouDays(o){ if(!o.exp) return null; return Math.ceil((new Date(o.exp)-new Date(todayISO()))/864e5); }
 const VOU_ICON={bon:'🎟️',carte:'💳',coupon:'✂️'};
 
-/* ---------- FACTURES ---------- */
-let invLines=[];
-function nextInvNo(){ const y=new Date().getFullYear(); const n=S.inv.filter(f=>String(f.no||'').startsWith(y)).length+1; return `${y}-${String(n).padStart(3,'0')}`; }
-function renderInvLines(){
-  $('inv-lines').innerHTML = invLines.map((ln,i)=>`
-    <div class="frow" style="margin-bottom:8px">
-      <input data-iline="${i}" data-f="d" placeholder="Désignation" value="${esc(ln.d)}" style="flex:2.2">
-      <input data-iline="${i}" data-f="q" type="number" min="1" step="1" value="${esc(ln.q)}" style="flex:.8" aria-label="Quantité">
-      <input data-iline="${i}" data-f="p" type="number" step="0.01" inputmode="decimal" placeholder="Prix" value="${esc(ln.p)}" style="flex:1.1">
-      <button class="mic-inline" style="flex:0 0 38px;color:var(--coral)" data-action="invDelLine" data-i="${i}">✕</button>
-    </div>`).join('');
-  invTotal();
+/* ---------- RAPPELS ---------- */
+function remDays(r){ if(!r.due) return null; return Math.ceil((new Date(r.due)-new Date(todayISO()))/864e5); }
+function remLevel(dj){ if(dj===null) return null; if(dj<=7) return 'red'; if(dj<=15) return 'orange'; if(dj<=30) return 'green'; return null; }
+function saveRem(){
+  const l=$('rml').value.trim(), due=$('rmd').value||null;
+  if(!l){ toast('❌ Texte du rappel requis','err'); return; }
+  if (editing.rem){ const r=S.rem.find(x=>x.id===editing.rem); if(r) Object.assign(r,{l,due}); }
+  else S.rem.push({id:gid(),l,due,done:false,m:S.mode});
+  const wasEdit=!!editing.rem;
+  sv(); closeModal('m-rem'); R();
+  toast(wasEdit ? `✏️ Rappel modifié : ${l}` : `✅ Rappel ajouté : ${l}${due?' — pour le '+due.split('-').reverse().join('/'):''}`);
 }
-function invTotal(){
-  const tot=invLines.reduce((s,l)=>s+(parseFloat(l.p)||0)*(parseInt(l.q)||1),0);
-  $('inv-total').textContent='Total : '+fmt(tot);
-  return tot;
-}
-function saveInv(){
-  const no=$('fno').value.trim(), date=$('fdate').value||todayISO(), client=$('fclient').value.trim();
-  const lines=invLines.filter(l=>l.d&&parseFloat(l.p)>0).map(l=>({d:l.d,q:parseInt(l.q)||1,p:parseFloat(l.p)}));
-  if(!client||!lines.length){ toast('Client et au moins une ligne requis'); return; }
-  const total=lines.reduce((s,l)=>s+l.p*l.q,0);
-  if (editing.inv){ const f=S.inv.find(x=>x.id===editing.inv); if(f) Object.assign(f,{no,date,client,lines,total}); }
-  else S.inv.push({id:gid(),no,date,client,lines,total,m:S.mode});
-  sv(); closeModal('m-inv'); R(); toast('Facture enregistrée 📄');
-}
-function editInv(d){ const f=S.inv.find(x=>x.id===d.id); if(!f) return;
-  editing={inv:f.id}; openModal('m-inv'); $('inv-title').textContent='✏️ Facture '+esc(f.no);
-  $('fno').value=f.no; $('fdate').value=f.date; $('fclient').value=f.client;
-  invLines=f.lines.map(l=>({...l})); renderInvLines(); }
-function delInv(d){ const f=S.inv.find(x=>x.id===d.id);
-  confirmDlg('Supprimer','Supprimer la facture '+(f?f.no:'')+' ?',()=>{ S.inv=S.inv.filter(x=>x.id!==d.id); sv(); R(); }); }
-function pdfInv(d){
-  const f=S.inv.find(x=>x.id===d.id); if(!f) return;
-  if (!window.jspdf){ toast('PDF indisponible hors-ligne'); return; }
-  const { jsPDF } = window.jspdf; const doc=new jsPDF();
-  const W=210, M=18; let y=24;
-  doc.setFont('helvetica','bold'); doc.setFontSize(20); doc.text('FACTURE',M,y);
-  doc.setFontSize(10); doc.setFont('helvetica','normal');
-  doc.text(`N° ${f.no}`,W-M,y-4,{align:'right'}); doc.text(`Date : ${f.date}`,W-M,y+1,{align:'right'});
-  y+=14; doc.setDrawColor(226,140,80); doc.setLineWidth(.8); doc.line(M,y,W-M,y); y+=10;
-  doc.setFont('helvetica','bold'); doc.text('Client',M,y); doc.setFont('helvetica','normal'); doc.text(f.client,M+22,y); y+=12;
-  doc.setFont('helvetica','bold');
-  doc.text('Désignation',M,y); doc.text('Qté',135,y,{align:'right'}); doc.text('PU',162,y,{align:'right'}); doc.text('Total',W-M,y,{align:'right'});
-  y+=3; doc.setLineWidth(.2); doc.line(M,y,W-M,y); y+=7; doc.setFont('helvetica','normal');
-  for (const l of f.lines){
-    if (y>270){ doc.addPage(); y=24; }
-    const dlines=doc.splitTextToSize(l.d,105);
-    doc.text(dlines,M,y);
-    doc.text(String(l.q),135,y,{align:'right'});
-    doc.text(l.p.toFixed(2),162,y,{align:'right'});
-    doc.text((l.p*l.q).toFixed(2),W-M,y,{align:'right'});
-    y+=dlines.length*5.2+3;
-  }
-  y+=4; doc.setLineWidth(.5); doc.line(110,y,W-M,y); y+=8;
-  doc.setFont('helvetica','bold'); doc.setFontSize(12);
-  doc.text('TOTAL : '+f.total.toFixed(2)+' €',W-M,y,{align:'right'});
-  doc.setFontSize(8); doc.setTextColor(150);
-  doc.text('Généré avec SCRIB FLOW',M,288);
-  doc.save(`facture-${f.no}.pdf`);
-}
+function editRem(d){ const r=S.rem.find(x=>x.id===d.id); if(!r) return;
+  editing={rem:r.id}; openModal('m-rem'); $('rem-title').textContent='✏️ Modifier le rappel';
+  $('rml').value=r.l; $('rmd').value=r.due||''; }
+function togRem(d){ const r=S.rem.find(x=>x.id===d.id); if(r){ r.done=!r.done; sv(); R(); if(r.done) toast(`✅ Rappel terminé : ${r.l}`); } }
+function delRem(d){ const r=S.rem.find(x=>x.id===d.id);
+  confirmDlg('Supprimer','Supprimer le rappel « '+(r?r.l:'')+' » ?',()=>{ S.rem=S.rem.filter(x=>x.id!==d.id); sv(); R(); toast('🗑 Rappel supprimé','err'); }); }
 
 /* ---------- BUDGET & CALCULS DU MOIS ---------- */
-function saveBgt(){ S.bgt[`${S.yr}-${S.mo}-${S.mode}`]=parseFloat($('bv').value)||0; sv(); closeModal('m-bgt'); R(); }
+function saveBgt(){ const v=parseFloat($('bv').value)||0; S.bgt[`${S.yr}-${S.mo}-${S.mode}`]=v; sv(); closeModal('m-bgt'); R(); toast(`✅ Budget de ${MO[S.mo]} : ${fmt(v)}`); }
 function monthData(yr,mo,mode){
   const inMonth = d => { const [y,m]=String(d||'').split('-').map(Number); return y===yr && m-1===mo; };
   const tx = S.tx.filter(t=>t.m===mode && inMonth(t.d));
@@ -1385,29 +1393,40 @@ function monthData(yr,mo,mode){
 }
 
 /* ---------- ALERTES ---------- */
+function alertLevel(dj){ if(dj<0) return 'red'; if(dj<=7) return 'red'; if(dj<=15) return 'orange'; if(dj<=30) return 'green'; return null; }
+function dlabel(dj){ return dj<0 ? `en retard de ${-dj} j` : dj===0 ? "aujourd'hui" : `dans ${dj} j`; }
 function buildAlerts(){
   const out=[]; const today=new Date(todayISO());
   for (const r of S.rec.filter(r=>r.m===S.mode && r.renew)){
     const dj=Math.ceil((new Date(r.renew)-today)/864e5);
-    if (dj>=0&&dj<=7) out.push({lvl:'red',msg:`🔁 ${esc(r.l)} se renouvelle dans ${dj} j (${r.renew})`});
-    else if (dj>7&&dj<=30) out.push({lvl:'orange',msg:`🔁 ${esc(r.l)} se renouvelle dans ${dj} j`});
+    const lvl=alertLevel(dj);
+    if (lvl) out.push({lvl, dj, msg:`🔁 ${esc(r.l)} se renouvelle ${dlabel(dj)} (${r.renew.split('-').reverse().join('/')})`});
   }
   for (const o of S.vou.filter(o=>o.m===S.mode && !o.used && o.exp)){
     const dj=vouDays(o);
-    if (dj!==null&&dj>=0&&dj<=7) out.push({lvl:'red',msg:`${VOU_ICON[o.tp]} ${esc(o.mch)} (${fmt(o.v)}) expire dans ${dj} j !`});
-    else if (dj!==null&&dj>7&&dj<=30) out.push({lvl:'orange',msg:`${VOU_ICON[o.tp]} ${esc(o.mch)} expire dans ${dj} j`});
+    if (dj===null) continue;
+    const lvl=alertLevel(dj);
+    if (lvl) out.push({lvl, dj, msg:`${VOU_ICON[o.tp]} ${esc(o.mch)} (${fmt(o.v)}) expire ${dlabel(dj)}`});
   }
-  return out;
+  for (const r of S.rem.filter(r=>r.m===S.mode && !r.done && r.due)){
+    const dj=remDays(r);
+    const lvl=alertLevel(dj);
+    if (lvl) out.push({lvl, dj, msg:`⏰ ${esc(r.l)} — ${dlabel(dj)}`});
+  }
+  return out.sort((a,b)=>a.dj-b.dj);
 }
 
 /* ---------- RENDU ---------- */
-const secOpen={tx:true,rec:false,inst:false,goals:false,vou:false,inv:false};
+const secOpen={tx:true,rec:false,inst:false,goals:false,vou:false,rem:false};
 function maskAmt(html){ return S.hideInc && !sessionUnlocked ? `<span class="locked-amt">${html}</span>` : html; }
 let sessionUnlocked=false;
 
 function R(){
   // mode + mois
   document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('on',b.dataset.v===S.mode));
+  const mb=$('mode-banner');
+  mb.className='mode-banner '+(S.mode==='perso'?'perso':'pro');
+  mb.textContent=S.mode==='perso'?'👤 MODE PERSONNEL':'💼 MODE PROFESSIONNEL';
   $('mo-label').textContent = MO[S.mo]+' '+S.yr;
   document.querySelectorAll('.sec').forEach(s=>{ const k=s.dataset.sec; if(k in secOpen) s.classList.toggle('open',secOpen[k]); });
   $('lock-btn').style.display = getPin() ? 'flex' : 'none';
@@ -1431,7 +1450,7 @@ function R(){
   $('st-day').innerHTML = daysLeft>0 ? maskAmt(fmt(Math.max(0,rest)/daysLeft)) : '—';
 
   renderAlerts(); renderSmart(md,bgt,rest,daysLeft);
-  renderTx(md); renderRec(); renderInst(); renderGoals(); renderVou(); renderInv();
+  renderTx(md); renderRec(); renderInst(); renderGoals(); renderVou(); renderRem();
   renderHab(); renderStats(md);
   $('set-currency').value=S.currency; $('set-hideinc').checked=!!S.hideInc;
   $('pin-sub').textContent = getPin() ? 'Activé · question secrète configurée' : 'Désactivé';
@@ -1479,7 +1498,7 @@ function renderRec(){
   $('list-rec').innerHTML = recs.length ? recs.map(r=>{
     const c=cat(r.ci); const isInc=r.tp==='inc';
     let pill=''; if (r.renew){ const dj=Math.ceil((new Date(r.renew)-new Date(todayISO()))/864e5);
-      if(dj>=0&&dj<=7)pill=`<span class="pill red">renouv. ${dj}j</span>`; else if(dj>7&&dj<=30)pill=`<span class="pill orange">renouv. ${dj}j</span>`; }
+      const lvl=alertLevel(dj); if(lvl) pill=`<span class="pill ${lvl}">renouv. ${dj<0?'dépassé':dj+' j'}</span>`; }
     return `<div class="row">
       <span class="ic" style="background:${isInc?'rgba(19,214,163,.14)':(c.c+'26')}">${isInc?'💵':c.i}</span>
       <span class="mid"><b>${esc(r.l)}${pill}</b><span>${isInc?'Revenu':esc(c.n)} · depuis ${r.start}${r.end?' → '+r.end:''}${r.cycle?' · engagement '+r.cycle+' mois':''}</span></span>
@@ -1523,8 +1542,7 @@ function renderVou(){
     const dj=vouDays(o);
     let pill=''; if(o.used)pill='<span class="pill teal">utilisé</span>';
     else if(dj!==null&&dj<0)pill='<span class="pill red">expiré</span>';
-    else if(dj!==null&&dj<=7)pill=`<span class="pill red">${dj} j</span>`;
-    else if(dj!==null&&dj<=30)pill=`<span class="pill orange">${dj} j</span>`;
+    else if(dj!==null&&alertLevel(dj))pill=`<span class="pill ${alertLevel(dj)}">${dj} j</span>`;
     return `<div class="row" style="${o.used?'opacity:.5':''}">
       ${o.photo?`<img class="photo-thumb" src="${o.photo}" alt="">`:`<span class="ic" style="background:var(--card2)">${VOU_ICON[o.tp]||'🎟️'}</span>`}
       <span class="mid"><b>${esc(o.mch)}${pill}</b><span>${o.tp==='carte'?'Carte cadeau':o.tp==='coupon'?'Coupon':'Bon d\'achat'}${o.exp?' · exp. '+o.exp.split('-').reverse().join('/'):''}</span></span>
@@ -1532,15 +1550,20 @@ function renderVou(){
       <span class="acts"><button data-action="togVou" data-id="${o.id}" aria-label="Utilisé">${o.used?'↩️':'✔️'}</button><button data-action="delVou" data-id="${o.id}">✕</button></span></div>`;
   }).join('') : `<div class="empty"><b>Aucun bon enregistré</b>Photographiez vos bons et cartes cadeaux, soyez alerté avant expiration.</div>`;
 }
-function renderInv(){
-  const fs=S.inv.filter(f=>f.m===S.mode).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  $('cnt-inv').textContent=fs.length||'';
-  $('list-inv').innerHTML = fs.length ? fs.map(f=>`<div class="row">
-      <span class="ic" style="background:rgba(59,167,201,.14)">📄</span>
-      <span class="mid"><b>${esc(f.no)} — ${esc(f.client)}</b><span>${f.date.split('-').reverse().join('/')} · ${f.lines.length} ligne${f.lines.length>1?'s':''}</span></span>
-      <span class="amt">${fmt(f.total)}</span>
-      ${rowActs('Inv',f.id,`<button data-action="pdfInv" data-id="${f.id}" aria-label="PDF">⬇️</button>`)}</div>`).join('')
-    : `<div class="empty"><b>Aucune facture</b>Créez une facture client et exportez-la en PDF.</div>`;
+function renderRem(){
+  const rs=S.rem.filter(r=>r.m===S.mode).sort((a,b)=>(a.done?1:0)-(b.done?1:0)||(a.due||'9').localeCompare(b.due||'9'));
+  $('cnt-rem').textContent=rs.filter(r=>!r.done).length||'';
+  $('list-rem').innerHTML = rs.length ? rs.map(r=>{
+    const dj=remDays(r); const lvl=remLevel(dj);
+    let pill='';
+    if (r.done) pill='<span class="pill teal">terminé</span>';
+    else if (dj!==null && dj<0) pill=`<span class="pill red">en retard de ${-dj} j</span>`;
+    else if (lvl) pill=`<span class="pill ${lvl}">${dj===0?"aujourd'hui":'dans '+dj+' j'}</span>`;
+    return `<div class="row" style="${r.done?'opacity:.5':''}">
+      <span class="ic" style="background:rgba(255,209,102,.14)">⏰</span>
+      <span class="mid"><b>${esc(r.l)}${pill}</b><span>${r.due?'Échéance : '+r.due.split('-').reverse().join('/'):'Sans date'}</span></span>
+      <span class="acts"><button data-action="togRem" data-id="${r.id}" aria-label="Terminé">${r.done?'↩️':'✔️'}</button><button data-action="editRem" data-id="${r.id}">✏️</button><button data-action="delRem" data-id="${r.id}">✕</button></span></div>`;
+  }).join('') : `<div class="empty"><b>Aucun rappel</b>Dictez « Facture Odyssi à payer avant le 15 juillet » 🎤</div>`;
 }
 function renderHab(){
   const hs=S.hab.filter(h=>h.m===S.mode);
@@ -1571,7 +1594,7 @@ function renderCats(){
 }
 function addCat(){
   const i=$('nc-icon').value.trim()||'📦', n=$('nc-name').value.trim(), c=$('nc-color').value;
-  if(!n){ toast('Nom requis'); return; }
+  if(!n){ toast('❌ Nom requis','err'); return; }
   CATS[S.mode].push({n,i,c}); saveCats(); renderCats(); R(); $('nc-name').value='';
 }
 function delCat(d){
@@ -1698,22 +1721,22 @@ async function pinDigit(k){
   const entered=pinBuf;
   if (pinStep==='create'){ pinTmp=entered; pinModal('confirm'); }
   else if (pinStep==='confirm'){
-    if (entered!==pinTmp){ toast('Les codes ne correspondent pas'); pinModal('create'); return; }
+    if (entered!==pinTmp){ toast('❌ Les codes ne correspondent pas','err'); pinModal('create'); return; }
     try{ localStorage.setItem(PIN_KEY,entered); }catch(e){}
     pinModal('sq');
   }
   else if (pinStep==='verify-manage'){
     if (entered===getPin()) pinModal('manage');
-    else { toast('Code incorrect'); pinBuf=''; updDots('pm-dots',0); }
+    else { toast('❌ Code incorrect','err'); pinBuf=''; updDots('pm-dots',0); }
   }
   else if (pinStep==='verify-hide'){
     if (entered===getPin()){ closeModal('m-pin'); sessionUnlocked=true; S.hideInc=$('set-hideinc').checked; sv(); R(); }
-    else { toast('Code incorrect'); pinBuf=''; updDots('pm-dots',0); }
+    else { toast('❌ Code incorrect','err'); pinBuf=''; updDots('pm-dots',0); }
   }
 }
 async function pinSaveSQ(){
   const q=$('sq-q').value.trim(), a=$('sq-a').value.trim();
-  if(!q||!a){ toast('Question et réponse requises'); return; }
+  if(!q||!a){ toast('❌ Question et réponse requises','err'); return; }
   try{ localStorage.setItem(SQ_KEY,JSON.stringify({q,a:await sha256(norm(a))})); }catch(e){}
   oneTimeResetCode = RC_ANIMALS[Math.floor(Math.random()*RC_ANIMALS.length)]+'-'
     +RC_COLORS[Math.floor(Math.random()*RC_COLORS.length)]+'-'
@@ -1725,13 +1748,13 @@ async function pinSaveSQ(){
 function pinResetNoted(){
   oneTimeResetCode=null; closeModal('m-pin');
   if (pendingPinSetupAction==='hide_revenues'){ S.hideInc=true; sv(); pendingPinSetupAction=null; }
-  R(); toast('PIN activé 🔐');
+  R(); toast('✅ Code PIN activé 🔐');
 }
 function pinChange(){ pinModal('create'); }
 function pinDisable(){
   confirmDlg('Désactiver le PIN','Le verrouillage et le masquage des revenus seront désactivés.',()=>{
     try{ localStorage.removeItem(PIN_KEY); localStorage.removeItem(SQ_KEY); localStorage.removeItem(RESET_KEY); }catch(e){}
-    S.hideInc=false; sessionUnlocked=false; sv(); closeModal('m-pin'); R(); toast('PIN désactivé');
+    S.hideInc=false; sessionUnlocked=false; sv(); closeModal('m-pin'); R(); toast('🗑 Code PIN désactivé','err');
   });
 }
 function pinCancel(){ closeModal('m-pin'); pendingPinSetupAction=null; R(); }
@@ -1778,8 +1801,8 @@ async function lockSQCheck(){
   const a=await sha256(norm($('lk-sqa').value.trim()));
   if (sq && a===sq.a){
     sessionUnlocked=true; $('lock').classList.remove('open');
-    toast('Déverrouillé — pensez à redéfinir votre PIN'); pinModal('create');
-  } else toast('Réponse incorrecte');
+    toast('✅ Identité vérifiée — créez un nouveau code','info'); pinModal('create');
+  } else toast('❌ Réponse incorrecte','err');
 }
 function lockReset(){
   const x=$('lock-extra'); x.style.display='flex';
@@ -1792,7 +1815,7 @@ async function lockResetCheck(){
   if (h===localStorage.getItem(RESET_KEY)){
     try{ localStorage.removeItem(CFG.sk); localStorage.removeItem(PIN_KEY); localStorage.removeItem(SQ_KEY); localStorage.removeItem(RESET_KEY); }catch(e){}
     location.reload();
-  } else toast('Code de secours incorrect');
+  } else toast('❌ Code de secours incorrect','err');
 }
 function toggleHideInc(){
   const want=$('set-hideinc').checked;
@@ -1813,9 +1836,9 @@ function exRange(){
   return [fy*12+fm-1, ty*12+tm-1];
 }
 function genExcel(){
-  if (S.hideInc && !sessionUnlocked && getPin()){ toast('Déverrouillez d\'abord (revenus masqués)'); pinModal('verify-hide'); return; }
-  if (!window.XLSX){ toast('Export indisponible hors-ligne'); return; }
-  const rg=exRange(); if(!rg){ toast('Choisissez la période'); return; }
+  if (S.hideInc && !sessionUnlocked && getPin()){ toast('🔒 Déverrouillez d\'abord (revenus masqués)','info'); pinModal('verify-hide'); return; }
+  if (!window.XLSX){ toast('❌ Export indisponible hors-ligne','err'); return; }
+  const rg=exRange(); if(!rg){ toast('❌ Choisissez la période','err'); return; }
   const exm=$('ex-mode').value;
   const modes = exm==='both' ? ['perso','pro'] : exm==='current' ? [S.mode] : [exm];
   const dep=[['Date','Libellé','Catégorie','Montant','Mode','Source']];
@@ -1840,7 +1863,7 @@ function genExcel(){
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rev), 'Revenus');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(syn), 'Synthèse');
   XLSX.writeFile(wb, `scribflow-export-${todayISO()}.xlsx`);
-  closeModal('m-export'); toast('Fichier Excel généré 📊');
+  closeModal('m-export'); toast('✅ Export Excel généré avec succès 📊');
 }
 
 /* ---------- SAUVEGARDE / RESTAURATION JSON ---------- */
@@ -1850,7 +1873,7 @@ function backup(){
   const a=document.createElement('a'); a.href=url;
   a.download=`scribflow-backup-${todayISO()}.json`; a.click();
   setTimeout(()=>URL.revokeObjectURL(url),2000);
-  toast('Sauvegarde téléchargée 💾');
+  toast('💾 Données exportées avec succès');
 }
 function restorePick(){ $('restore-file').click(); }
 $('restore-file').addEventListener('change', e=>{
@@ -1863,9 +1886,9 @@ $('restore-file').addEventListener('change', e=>{
       confirmDlg('Restaurer','Remplacer toutes les données actuelles par cette sauvegarde ?',()=>{
         S=migrate(data.state);
         if (data.cats){ CATS=data.cats; saveCats(); }
-        sv(); R(); toast('Données restaurées ✅');
+        sv(); R(); toast('✅ Données importées avec succès');
       });
-    }catch(err){ toast('Fichier de sauvegarde invalide'); }
+    }catch(err){ toast('❌ Fichier de sauvegarde invalide','err'); }
     e.target.value='';
   };
   rd.readAsText(f);
@@ -1900,6 +1923,7 @@ function seedDemo(){
   for (let d=1; d<=Math.min(n.getDate(),28); d++) if (d%2) S.hl[`${yr}-${mo}-${d}-${S.hab[0].id}`]=true;
   S.bgt[`${yr}-${mo}-perso`]=2200;
   S.vou=[{id:gid(),tp:'carte',mch:'Galleria',v:50,exp:D(28),photo:null,used:false,m:'perso'}];
+  S.rem=[{id:gid(),l:'Facture Odyssi à payer',due:D(Math.min(n.getDate()+12,28)),done:false,m:'perso'}];
   try{ localStorage.setItem(CFG.sk, JSON.stringify(S)); }catch(e){} // synchrone : load() le relira juste après
 }
 
@@ -1931,9 +1955,7 @@ const ACTIONS = {
   saveBgt, addCat, delCat,
   exPeriod, genExcel, backup, restorePick,
   saveVou, togVou, delVou,
-  saveInv, editInv, delInv, pdfInv,
-  invAddLine:()=>{ invLines.push({d:'',q:1,p:''}); renderInvLines(); },
-  invDelLine:d=>{ invLines.splice(+d.i,1); if(!invLines.length)invLines=[{d:'',q:1,p:''}]; renderInvLines(); },
+  saveRem, editRem, togRem, delRem,
   pinManage, pinSaveSQ, pinResetNoted, pinChange, pinDisable, pinCancel,
   lockNow, lockSQ, lockSQCheck, lockReset, lockResetCheck
 };
@@ -1958,7 +1980,6 @@ document.addEventListener('change', e=>{
 document.addEventListener('input', e=>{
   const t=e.target;
   if (t.id==='el') autoCatBadge(t.value);
-  if (t.dataset.iline!==undefined){ invLines[+t.dataset.iline][t.dataset.f]=t.value; invTotal(); }
   if (t.dataset.cat!==undefined){ const c=CATS[S.mode][+t.dataset.cat]; if(c){ c[t.dataset.f]=t.value; saveCats(); R(); } }
   if (['itotal','idep','inb'].includes(t.id)) instPreview();
 });
