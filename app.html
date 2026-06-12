@@ -82,7 +82,8 @@ input[type=color]{padding:3px;width:44px;height:38px;cursor:pointer}
 .mode-btn.on{color:#fff;background:linear-gradient(135deg,var(--amber),var(--amber2));border-color:transparent;
   box-shadow:0 6px 18px rgba(217,64,47,.3)}
 
-.mode-banner{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;margin:-6px 0 14px;letter-spacing:.6px}
+.mode-banner{padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;text-align:center;letter-spacing:.6px}
+.mb-modal{margin:-6px 0 14px}
 .mode-banner.perso{background:rgba(6,214,160,.15);color:var(--teal);border:1px solid rgba(6,214,160,.25)}
 .mode-banner.pro{background:rgba(201,177,255,.15);color:var(--violet);border:1px solid rgba(201,177,255,.25)}
 
@@ -298,7 +299,6 @@ input[type=color]{padding:3px;width:44px;height:38px;cursor:pointer}
 
   <!-- ===== PAGE BUDGET ===== -->
   <main id="page-budget" class="page">
-    <div id="mode-banner" class="mode-banner"></div>
     <div id="alerts" class="alerts"></div>
 
     <section class="hero">
@@ -423,6 +423,7 @@ input[type=color]{padding:3px;width:44px;height:38px;cursor:pointer}
 <!-- Dépense -->
 <div class="mo" id="m-exp"><div class="md">
   <div class="mh"><span class="mt" id="exp-title">− Nouvelle dépense</span><button class="mc" data-action="close" data-m="m-exp">✕</button></div>
+  <div class="mode-banner mb-modal"></div>
   <div class="mf">
     <span class="mflbl">Libellé</span>
     <div class="frow"><input id="el" placeholder="Ex : pain — Carrefour Dillon" autocomplete="off">
@@ -441,6 +442,7 @@ input[type=color]{padding:3px;width:44px;height:38px;cursor:pointer}
 <!-- Revenu -->
 <div class="mo" id="m-inc"><div class="md">
   <div class="mh"><span class="mt" id="inc-title">+ Nouveau revenu</span><button class="mc" data-action="close" data-m="m-inc">✕</button></div>
+  <div class="mode-banner mb-modal"></div>
   <div class="mf">
     <span class="mflbl">Libellé</span>
     <div class="frow"><input id="il" placeholder="Ex : Salaire" autocomplete="off">
@@ -456,6 +458,7 @@ input[type=color]{padding:3px;width:44px;height:38px;cursor:pointer}
 <!-- Récurrent -->
 <div class="mo" id="m-rec"><div class="md">
   <div class="mh"><span class="mt" id="rec-title">🔁 Récurrent mensuel</span><button class="mc" data-action="close" data-m="m-rec">✕</button></div>
+  <div class="mode-banner mb-modal"></div>
   <div class="mf">
     <span class="mflbl">Type</span>
     <select id="rtp"><option value="exp">Dépense (loyer, abonnement…)</option><option value="inc">Revenu (salaire…)</option></select>
@@ -482,6 +485,7 @@ input[type=color]{padding:3px;width:44px;height:38px;cursor:pointer}
 <!-- Échéancier -->
 <div class="mo" id="m-inst"><div class="md">
   <div class="mh"><span class="mt" id="inst-title">📆 Paiement en plusieurs fois</span><button class="mc" data-action="close" data-m="m-inst">✕</button></div>
+  <div class="mode-banner mb-modal"></div>
   <div class="mf">
     <span class="mflbl">Type</span>
     <select id="itp"><option value="exp">Dépense (achat à crédit)</option><option value="inc">Revenu (paiement client échelonné)</option></select>
@@ -1184,6 +1188,10 @@ function vxClose(){ vxStop(); closeModal('m-vx'); }
 let editing = {}; // {type, id} en cours d'édition
 function openModal(id){
   const m=$(id); if(!m) return;
+  m.querySelectorAll('.mb-modal').forEach(b=>{
+    b.className='mode-banner mb-modal '+(S.mode==='perso'?'perso':'pro');
+    b.textContent=S.mode==='perso'?'👤 MODE PERSONNEL':'💼 MODE PROFESSIONNEL';
+  });
   if (id==='m-exp' && !editing.exp){ $('el').value='';$('ea').value='';$('ed').value=todayISO();fillCatSelect($('ec'),0);$('cat-badge').style.display='none';$('exp-title').textContent='− Nouvelle dépense'; }
   if (id==='m-inc' && !editing.inc){ $('il').value='';$('ia').value='';$('id2').value=todayISO();$('inc-title').textContent='+ Nouveau revenu'; }
   if (id==='m-rec' && !editing.rec){ ['rl','ra','rend','rcycle','rrenew'].forEach(i=>$(i).value=''); $('rtp').value='exp'; $('rstart').value=`${S.yr}-${String(S.mo+1).padStart(2,'0')}`; fillCatSelect($('rc'),0); $('rec-title').textContent='🔁 Récurrent mensuel'; }
@@ -1424,9 +1432,6 @@ let sessionUnlocked=false;
 function R(){
   // mode + mois
   document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('on',b.dataset.v===S.mode));
-  const mb=$('mode-banner');
-  mb.className='mode-banner '+(S.mode==='perso'?'perso':'pro');
-  mb.textContent=S.mode==='perso'?'👤 MODE PERSONNEL':'💼 MODE PROFESSIONNEL';
   $('mo-label').textContent = MO[S.mo]+' '+S.yr;
   document.querySelectorAll('.sec').forEach(s=>{ const k=s.dataset.sec; if(k in secOpen) s.classList.toggle('open',secOpen[k]); });
   $('lock-btn').style.display = getPin() ? 'flex' : 'none';
